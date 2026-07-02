@@ -51,7 +51,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .balance-row-right { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-mid); padding: 6px; flex-shrink: 0; }
 
 .fab-row { display: flex; justify-content: space-around; padding: 10px 24px 10px; background: transparent; flex-shrink: 0; }
-.fab { width: 80px; height: 80px; border-radius: 50%; border: 3px solid; background: none; font-size: 34px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
+.fab { width: 96px; height: 96px; border-radius: 50%; border: 3px solid; background: none; font-size: 41px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
 .fab:active { transform: scale(0.92); }
 .fab-expense { border-color: var(--red); color: var(--red); }
 .fab-income { border-color: var(--green-dark); color: var(--green-dark); }
@@ -265,6 +265,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
       <span style="font-size:18px;color:var(--text-light);">✏️</span>
       <input type="text" id="note-input" placeholder="Add note" autocomplete="off">
     </div>
+    <div style="flex:1;"></div>
     <div class="numpad">
       <button class="numpad-key" onclick="numpadAction('1')">1</button>
       <button class="numpad-key" onclick="numpadAction('2')">2</button>
