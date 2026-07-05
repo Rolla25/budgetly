@@ -42,16 +42,18 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .month-item.active { color: white; font-weight: 600; font-size: 16px; }
 
 .balance-row { display: flex; align-items: center; gap: 8px; margin: 14px 16px 0; flex-shrink: 0; }
-.balance-row-left { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-mid); padding: 6px; flex-shrink: 0; }
-.balance-bar { flex: 1; border-radius: 12px; padding: 13px 18px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+.balance-row-left { background: none; border: none; cursor: pointer; padding: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.balance-row-right { background: none; border: none; cursor: pointer; padding: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 36px; font-size: 22px; font-weight: 700; color: var(--green-dark); }
+.hamburger-lines { display: flex; flex-direction: column; gap: 4px; }
+.hamburger-lines span { display: block; width: 22px; height: 2.5px; background: var(--green-dark); border-radius: 2px; }
+.balance-bar { flex: 1; border-radius: 12px; padding: 13px 18px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .balance-bar.negative { background: var(--red); }
 .balance-bar.positive { background: var(--green-dark); }
 .balance-label { font-size: 16px; font-weight: 500; color: white; }
 .balance-amount { font-size: 20px; font-weight: 700; color: white; }
-.balance-row-right { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-mid); padding: 6px; flex-shrink: 0; }
 
 .fab-row { display: flex; justify-content: space-around; padding: 10px 24px 10px; background: transparent; flex-shrink: 0; }
-.fab { width: 96px; height: 96px; border-radius: 50%; border: 3px solid; background: none; font-size: 41px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
+.fab { width: 115px; height: 115px; border-radius: 50%; border: 3px solid; background: none; font-size: 49px; font-weight: 300; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
 .fab:active { transform: scale(0.92); }
 .fab-expense { border-color: var(--red); color: var(--red); }
 .fab-income { border-color: var(--green-dark); color: var(--green-dark); }
@@ -123,22 +125,22 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .add-cancel { background: none; border: none; color: white; font-size: 16px; cursor: pointer; padding: 4px; }
 .add-title { font-size: 18px; font-weight: 600; color: white; }
 .add-date { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; font-size: 15px; color: var(--text-mid); cursor: pointer; flex-shrink: 0; }
-.amount-display { margin: 0 16px; background: var(--green-mid); border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.amount-display { margin: 0 16px; background: var(--green-mid); border-radius: 14px; padding: 20px 22px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .amount-display.expense-mode { background: var(--red); }
-.amount-value { flex: 1; font-size: 36px; font-weight: 600; color: white; text-align: right; letter-spacing: -1px; }
+.amount-value { flex: 1; font-size: 45px; font-weight: 600; color: white; text-align: right; letter-spacing: -1px; }
 .amount-backspace { background: none; border: none; font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.8); padding: 4px 0 4px 8px; }
 .note-input { margin: 14px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--border); padding-bottom: 10px; flex-shrink: 0; }
 .note-input input { flex: 1; border: none; background: none; font-size: 15px; color: var(--text-dark); outline: none; }
 .note-input input::placeholder { color: var(--text-light); }
 
-.numpad { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; padding: 6px; background: var(--green-bg); flex-shrink: 0; height: 28.8vh; }
+.numpad { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; padding: 6px; background: var(--green-bg); flex-shrink: 0; height: 33.1vh; }
 .numpad-key { background: white; border: 1.5px solid var(--border); border-radius: 10px; font-size: clamp(18px, 5vw, 26px); font-weight: 400; color: var(--text-dark); cursor: pointer; transition: background 0.1s; text-align: center; display: flex; align-items: center; justify-content: center; }
 .numpad-key:active { background: var(--green-pale); }
 .numpad-key.op { color: var(--green-dark); }
 .numpad-key.equals { color: white; background: var(--green-mid); border-color: var(--green-mid); }
 .numpad-key.equals:active { background: var(--green-dark); }
 
-.cat-choose-btn { margin: 0 6px calc(5vh); background: var(--green-pale); border: 1.5px solid var(--border); border-radius: 10px; height: 7.2vh; font-size: clamp(13px, 3.5vw, 16px); font-weight: 600; color: var(--green-dark); letter-spacing: 0.5px; cursor: pointer; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.cat-choose-btn { margin: 0 6px calc(5vh); background: var(--green-pale); border: 1.5px solid var(--border); border-radius: 10px; height: 8.3vh; font-size: clamp(13px, 3.5vw, 16px); font-weight: 600; color: var(--green-dark); letter-spacing: 0.5px; cursor: pointer; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
 /* Full-screen category overlay */
 .cat-overlay { display: none; position: absolute; inset: 0; background: white; z-index: 10; flex-direction: column; }
@@ -211,11 +213,16 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
     </div>
 
     <div class="balance-row">
-      <div class="balance-bar positive" id="home-balance" onclick="toggleCatListView()">
+      <button class="balance-row-left" id="left-lines-btn" onclick="handleLeftLines()">
+        <span class="hamburger-lines"><span></span><span></span><span></span></span>
+      </button>
+      <div class="balance-bar positive" id="home-balance">
         <span class="balance-label">Balance</span>
         <span class="balance-amount" id="home-balance-amount">₹0.00</span>
       </div>
-      <button class="balance-row-right" id="collapse-btn" onclick="handleArrowClick()">↓</button>
+      <button class="balance-row-right" id="right-btn" onclick="handleRightBtn()">
+        <span class="hamburger-lines" id="right-lines"><span></span><span></span><span></span></span>
+      </button>
     </div>
 
     <div class="donut-view" id="view-donut">
@@ -487,20 +494,33 @@ function setView(v) {
   document.getElementById('view-donut').style.display   = v === 'donut'    ? 'flex'  : 'none';
   document.getElementById('view-catlist').style.display  = v === 'catlist'  ? 'block' : 'none';
   document.getElementById('view-datelist').style.display = v === 'datelist' ? 'block' : 'none';
-  document.getElementById('collapse-btn').textContent = v === 'donut' ? '↓' : '↑';
+
+  // Right button: 3 lines when donut, arrow when list is open
+  const rightBtn = document.getElementById('right-btn');
+  if (v === 'donut') {
+    rightBtn.innerHTML = '<span class="hamburger-lines"><span></span><span></span><span></span></span>';
+  } else if (v === 'datelist') {
+    rightBtn.innerHTML = '↓';
+  } else if (v === 'catlist') {
+    rightBtn.innerHTML = '↑';
+  }
+
   if (v === 'catlist')  renderCatListView();
   if (v === 'datelist') renderDateListView();
   if (v === 'donut')    renderDonut();
 }
 
-function handleArrowClick() {
+// Left 3 lines: open transactions (if donut), or close (if list open)
+function handleLeftLines() {
   if (currentView === 'donut') setView('datelist');
   else setView('donut');
 }
 
-function toggleCatListView() {
-  if (currentView === 'catlist') setView('donut');
-  else setView('catlist');
+// Right button: open transactions (if donut), or toggle between datelist ↔ catlist
+function handleRightBtn() {
+  if (currentView === 'donut') setView('datelist');
+  else if (currentView === 'datelist') setView('catlist');
+  else if (currentView === 'catlist') setView('datelist');
 }
 
 function renderHome() {
