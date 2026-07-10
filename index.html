@@ -787,12 +787,12 @@ function renderDateListView() {
   if (settings.carryOver) {
     const co = getCarryOverBalance();
     const y = state.currentYear, m = state.currentMonth;
-    const firstDay = new Date(y, m, 1).toISOString().split('T')[0];
+    const firstDayLabel = '1 ' + MONTHS_SHORT[m];
     const coDiv = document.createElement('div');
     coDiv.className = 'date-group';
     coDiv.innerHTML = '<div class="date-group-header">' +
       '<span class="date-group-chevron" style="visibility:hidden;">▼</span>' +
-      '<span class="date-group-label">' + fmtDateShort(firstDay) + '</span>' +
+      '<span class="date-group-label">' + firstDayLabel + '</span>' +
       '<span style="flex:1;font-size:13px;color:var(--text-mid);padding-left:8px;">Carry Over</span>' +
       '<span class="date-group-total" style="color:' + (co >= 0 ? 'var(--green-dark)' : 'var(--red)') + ';">' +
       (co >= 0 ? '+' : '−') + fmtAmt(Math.abs(co)) + '</span>' +
