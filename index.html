@@ -792,7 +792,8 @@ function renderDateListView() {
     coDiv.className = 'date-group';
     coDiv.innerHTML = '<div class="date-group-header">' +
       '<span class="date-group-chevron" style="visibility:hidden;">▼</span>' +
-      '<span class="date-group-label">Carry Over</span>' +
+      '<span class="date-group-label">' + fmtDateShort(firstDay) + '</span>' +
+      '<span style="flex:1;font-size:13px;color:var(--text-mid);padding-left:8px;">Carry Over</span>' +
       '<span class="date-group-total" style="color:' + (co >= 0 ? 'var(--green-dark)' : 'var(--red)') + ';">' +
       (co >= 0 ? '+' : '−') + fmtAmt(Math.abs(co)) + '</span>' +
       '</div>';
