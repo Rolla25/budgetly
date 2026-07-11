@@ -153,6 +153,16 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .btn-secondary { flex: 1; background: var(--green-pale); color: var(--green-dark); border: none; border-radius: 12px; padding: 14px 20px; font-size: 16px; font-weight: 500; cursor: pointer; }
 .btn-danger { background: var(--red-pale); color: var(--red); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
 
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 6px; }
+.settings-row-label { font-size: 15px; font-weight: 500; color: var(--text-dark); }
+.settings-row-desc { font-size: 12px; color: var(--text-light); margin-top: 3px; line-height: 1.4; }
+.toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 28px; transition: 0.3s; }
+.toggle-slider:before { position: absolute; content: ''; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+input:checked + .toggle-slider { background: var(--green-mid); }
+input:checked + .toggle-slider:before { transform: translateX(22px); }
+
 .toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
@@ -166,7 +176,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
       <a href="wealthly.html" class="app-tab active" aria-current="page">Wealthly</a>
     </nav>
     <div class="header-actions">
-      <button class="header-btn" title="Settings" onclick="showToast('Settings coming soon')">⚙️</button>
+      <button class="header-btn" title="Settings" onclick="openSettingsModal()">⚙️</button>
     </div>
   </div>
 
@@ -323,6 +333,26 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
   </div>
 </div>
 
+<!-- Settings modal -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-title">Settings</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Carry Forward Balances</div>
+        <div class="settings-row-desc">Start each new month with last month's assets and liabilities already filled in, so you only need to edit what's changed.</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="carry-forward-toggle" onchange="onCarryForwardToggle()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeModal('modal-settings')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -351,6 +381,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 let snapshots = {};
+let settings = { carryForward: true };
 let state = { currentYear: new Date().getFullYear(), currentMonth: new Date().getMonth() };
 let trendPeriod = '12';
 let expandOpen = { assets: false, liabilities: false };
@@ -365,6 +396,13 @@ function load() {
 function save() {
   localStorage.setItem('wealthly_snapshots', JSON.stringify(snapshots));
 }
+function loadSettings() {
+  const raw = localStorage.getItem('wealthly_settings');
+  if (raw) settings = Object.assign(settings, JSON.parse(raw));
+}
+function saveSettings() {
+  localStorage.setItem('wealthly_settings', JSON.stringify(settings));
+}
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function monthKey(y, m) { return y + '-' + pad2(m + 1); }
@@ -374,19 +412,33 @@ function keyToLabel(key) {
   return MONTHS_SHORT[m - 1] + ' ' + y;
 }
 
-function getSnapshot(key) {
+// Read-only: for display. Never writes to `snapshots`, so simply viewing a
+// month never "locks in" an empty snapshot that would block later carry-forward.
+function computeDisplaySnapshot(key) {
   if (snapshots[key]) return snapshots[key];
-  const priorKeys = Object.keys(snapshots).filter(k => k < key).sort();
-  if (priorKeys.length) {
-    const prev = snapshots[priorKeys[priorKeys.length - 1]];
-    snapshots[key] = {
-      assets: JSON.parse(JSON.stringify(prev.assets)),
-      liabilities: JSON.parse(JSON.stringify(prev.liabilities)),
-      lastUpdated: null,
-    };
-  } else {
-    snapshots[key] = { assets: [], liabilities: [], lastUpdated: null };
+  if (settings.carryForward) {
+    const priorKeys = Object.keys(snapshots).filter(k => k < key).sort();
+    if (priorKeys.length) {
+      const prev = snapshots[priorKeys[priorKeys.length - 1]];
+      return {
+        assets: JSON.parse(JSON.stringify(prev.assets)),
+        liabilities: JSON.parse(JSON.stringify(prev.liabilities)),
+        lastUpdated: null,
+      };
+    }
   }
+  return { assets: [], liabilities: [], lastUpdated: null };
+}
+
+// Write path: actually creates/stores the month's snapshot the first time it's edited.
+function materializeSnapshot(key) {
+  if (snapshots[key]) return snapshots[key];
+  const display = computeDisplaySnapshot(key);
+  snapshots[key] = {
+    assets: JSON.parse(JSON.stringify(display.assets)),
+    liabilities: JSON.parse(JSON.stringify(display.liabilities)),
+    lastUpdated: null,
+  };
   return snapshots[key];
 }
 
@@ -433,7 +485,7 @@ function changeMonth(dir) {
 function renderAll() {
   updateMonthBars();
   const key = currentKey();
-  const snap = getSnapshot(key);
+  const snap = computeDisplaySnapshot(key);
   const totalAssets = sumItems(snap.assets);
   const totalLiabilities = sumItems(snap.liabilities);
   const netWorth = totalAssets - totalLiabilities;
@@ -796,7 +848,7 @@ function openAssetForm(id) {
   populateAssetCategories();
   editingAssetId = id;
   if (id) {
-    const snap = getSnapshot(currentKey());
+    const snap = computeDisplaySnapshot(currentKey());
     const item = snap.assets.find(a => a.id === id);
     document.getElementById('asset-form-title').textContent = 'Edit Asset';
     document.getElementById('asset-name').value = item.name;
@@ -825,7 +877,7 @@ function saveAsset() {
   if (!catId) { showToast('Select a category'); return; }
   if (valueRaw === '' || isNaN(value) || value < 0) { showToast('Enter a valid value'); return; }
 
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   if (editingAssetId) {
     const item = snap.assets.find(a => a.id === editingAssetId);
     Object.assign(item, { name, catId, value, note });
@@ -840,7 +892,7 @@ function saveAsset() {
 }
 function deleteAsset() {
   if (!editingAssetId) return;
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   snap.assets = snap.assets.filter(a => a.id !== editingAssetId);
   snap.lastUpdated = new Date().toISOString();
   save();
@@ -849,7 +901,7 @@ function deleteAsset() {
   showToast('Asset deleted');
 }
 function quickDeleteAsset(id) {
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   snap.assets = snap.assets.filter(a => a.id !== id);
   snap.lastUpdated = new Date().toISOString();
   save();
@@ -867,7 +919,7 @@ function openLiabilityForm(id) {
   populateLiabilityCategories();
   editingLiabilityId = id;
   if (id) {
-    const snap = getSnapshot(currentKey());
+    const snap = computeDisplaySnapshot(currentKey());
     const item = snap.liabilities.find(l => l.id === id);
     document.getElementById('liability-form-title').textContent = 'Edit Liability';
     document.getElementById('liability-name').value = item.name;
@@ -896,7 +948,7 @@ function saveLiability() {
   if (!catId) { showToast('Select a category'); return; }
   if (valueRaw === '' || isNaN(value) || value < 0) { showToast('Enter a valid amount'); return; }
 
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   if (editingLiabilityId) {
     const item = snap.liabilities.find(l => l.id === editingLiabilityId);
     Object.assign(item, { name, catId, value, note });
@@ -911,7 +963,7 @@ function saveLiability() {
 }
 function deleteLiability() {
   if (!editingLiabilityId) return;
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   snap.liabilities = snap.liabilities.filter(l => l.id !== editingLiabilityId);
   snap.lastUpdated = new Date().toISOString();
   save();
@@ -920,12 +972,23 @@ function deleteLiability() {
   showToast('Liability deleted');
 }
 function quickDeleteLiability(id) {
-  const snap = getSnapshot(currentKey());
+  const snap = materializeSnapshot(currentKey());
   snap.liabilities = snap.liabilities.filter(l => l.id !== id);
   snap.lastUpdated = new Date().toISOString();
   save();
   renderAll();
   showToast('Liability deleted');
+}
+
+/* ---------- Settings ---------- */
+function openSettingsModal() {
+  document.getElementById('carry-forward-toggle').checked = settings.carryForward;
+  openModal('modal-settings');
+}
+function onCarryForwardToggle() {
+  settings.carryForward = document.getElementById('carry-forward-toggle').checked;
+  saveSettings();
+  renderAll();
 }
 
 /* ---------- Modal + toast helpers ---------- */
@@ -941,6 +1004,7 @@ function showToast(msg) {
 }
 
 load();
+loadSettings();
 renderAll();
 </script>
 </body>
