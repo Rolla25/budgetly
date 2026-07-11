@@ -597,9 +597,25 @@ function renderDonut(snap, totalAssets) {
     ctx.closePath();
     ctx.fillStyle = seg.cat.color;
     ctx.fill();
+    seg._midAngle = angle + slice / 2;
+    seg._pct = (seg.total / totalAssets) * 100;
     angle += slice;
   });
   ctx.restore();
+
+  // percentage labels on the ring (skip slices too thin to hold readable text)
+  const labelR = (outerR + innerR) / 2;
+  ctx.font = '700 11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  segments.forEach(seg => {
+    if (seg._pct < 6) return;
+    const lx = cx + labelR * Math.cos(seg._midAngle);
+    const ly = cy + labelR * Math.sin(seg._midAngle);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fillText(Math.round(seg._pct) + '%', lx, ly);
+  });
+
   ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
   ctx.fillStyle = '#ffffff'; ctx.fill();
 
