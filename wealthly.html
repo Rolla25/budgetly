@@ -16,6 +16,7 @@
   --green-pale: #e8f5ec;
   --green-bg: #f0f8f2;
   --red: #e05c6a;
+  --red-soft: #e17e88;
   --red-pale: #fdeaec;
   --text-dark: #1e2d24;
   --text-mid: #4a6355;
@@ -42,7 +43,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .month-item.active { color: white; font-weight: 600; font-size: 16px; }
 
 /* Scrollable content */
-.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 110px; }
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 112px; }
 
 /* Net worth card */
 .nw-card { background: var(--green-dark); border-radius: 20px; padding: 24px 20px 20px; color: white; text-align: center; margin-bottom: 6px; }
@@ -52,8 +53,8 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .nw-split-item { display: flex; flex-direction: column; gap: 3px; }
 .nw-split-label { font-size: 11px; opacity: 0.8; }
 .nw-split-value { font-size: 16px; font-weight: 700; }
-.nw-split-value.assets { color: #d3f5dd; }
-.nw-split-value.liabilities { color: #ffd7db; }
+.nw-split-value.assets { color: #bdeed0; }
+.nw-split-value.liabilities { color: #f6c3ca; }
 
 .nw-change { text-align: center; font-size: 13px; font-weight: 600; margin: 10px 0 18px; }
 .nw-change.positive { color: var(--green-dark); }
@@ -63,6 +64,14 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 /* Generic card */
 .card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; }
+.card-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.card-title-row .card-title { margin-bottom: 0; }
+
+/* Onboarding empty state (no records at all) */
+.onboarding-card { background: white; border-radius: 16px; padding: 38px 24px; text-align: center; margin-bottom: 16px; }
+.onboarding-icon { font-size: 44px; margin-bottom: 12px; }
+.onboarding-title { font-size: 17px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; }
+.onboarding-text { font-size: 13px; color: var(--text-light); line-height: 1.5; max-width: 270px; margin: 0 auto; }
 
 /* Donut */
 .donut-wrap-sm { position: relative; width: 210px; height: 210px; margin: 0 auto; }
@@ -72,16 +81,24 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .legend-list { margin-top: 18px; display: flex; flex-direction: column; gap: 11px; }
 .legend-row { display: flex; align-items: center; gap: 10px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-name { flex: 1; font-size: 13px; color: var(--text-dark); }
+.legend-name { flex: 1; font-size: 13px; color: var(--text-dark); font-weight: 500; }
 .legend-pct { font-size: 12px; color: var(--text-light); width: 38px; text-align: right; }
 .legend-amt { font-size: 13px; font-weight: 600; width: 92px; text-align: right; }
-.chart-empty { text-align: center; color: var(--text-light); font-size: 13px; padding: 30px 10px; }
+.chart-empty { text-align: center; color: var(--text-light); font-size: 13px; padding: 30px 10px; line-height: 1.5; }
 
 /* Trend chart */
+.trend-badge { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.trend-badge.positive { background: var(--green-pale); color: var(--green-dark); }
+.trend-badge.negative { background: var(--red-pale); color: var(--red); }
+.trend-badge.neutral { background: var(--green-bg); color: var(--text-light); }
 .period-row { display: flex; gap: 8px; margin-bottom: 14px; }
 .period-btn { flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--green-bg); font-size: 12px; font-weight: 600; color: var(--text-mid); cursor: pointer; }
 .period-btn.active { background: var(--green-mid); color: white; border-color: var(--green-mid); }
-#trend-canvas { width: 100%; display: block; }
+.trend-canvas-wrap { position: relative; width: 100%; }
+#trend-canvas { display: block; touch-action: pan-y; }
+.trend-tooltip { position: absolute; pointer-events: none; background: var(--text-dark); color: white; font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; transform: translate(-50%, -120%); white-space: nowrap; opacity: 0; transition: opacity 0.12s ease; z-index: 5; }
+.trend-tooltip.show { opacity: 1; }
+.trend-tooltip-month { font-size: 10px; font-weight: 500; opacity: 0.75; display: block; }
 
 /* Expandable Assets / Liabilities sections */
 .expand-section { margin-bottom: 14px; }
@@ -105,13 +122,22 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .item-value { font-size: 14px; font-weight: 600; white-space: nowrap; }
 .item-actions { display: flex; gap: 0; flex-shrink: 0; }
 .icon-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 6px; color: var(--text-light); }
-.empty-inline { padding: 16px 0; text-align: center; color: var(--text-light); font-size: 13px; }
 
-/* Update Wealth fixed button */
-.update-btn-wrap { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; padding: 12px 16px calc(12px + var(--safe-bottom)); background: linear-gradient(to top, var(--green-bg) 55%, rgba(240,248,242,0)); pointer-events: none; }
-.update-btn-wrap .inner { max-width: 430px; width: 100%; pointer-events: all; }
-.update-btn { width: 100%; background: var(--green-mid); color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(74,138,93,0.35); }
-.update-btn:active { background: var(--green-dark); }
+/* Per-section empty states */
+.empty-state-block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 26px 12px; }
+.empty-state-icon { font-size: 32px; margin-bottom: 2px; }
+.empty-state-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+.empty-state-text { font-size: 12.5px; color: var(--text-light); line-height: 1.5; max-width: 230px; }
+
+/* Bottom action buttons */
+.action-btn-wrap { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; padding: 12px 16px calc(12px + var(--safe-bottom)); background: linear-gradient(to top, var(--green-bg) 55%, rgba(240,248,242,0)); pointer-events: none; }
+.action-btn-wrap .inner { max-width: 430px; width: 100%; display: flex; gap: 10px; pointer-events: all; }
+.action-btn { flex: 1; border: none; border-radius: 14px; padding: 15px 10px; font-size: 14.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; color: white; }
+.action-btn.asset { background: var(--green-mid); box-shadow: 0 4px 14px rgba(74,138,93,0.32); }
+.action-btn.asset:active { background: var(--green-dark); }
+.action-btn.liability { background: var(--red-soft); box-shadow: 0 4px 14px rgba(224,92,106,0.28); }
+.action-btn.liability:active { background: var(--red); }
+.action-btn-icon { font-size: 16px; line-height: 1; }
 
 /* Modals */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: flex-end; justify-content: center; }
@@ -126,14 +152,6 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 .btn-primary { flex: 1; background: var(--green-mid); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; }
 .btn-secondary { flex: 1; background: var(--green-pale); color: var(--green-dark); border: none; border-radius: 12px; padding: 14px 20px; font-size: 16px; font-weight: 500; cursor: pointer; }
 .btn-danger { background: var(--red-pale); color: var(--red); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
-
-.sheet-actions-row { display: flex; gap: 10px; margin-bottom: 18px; }
-.sheet-add-btn { flex: 1; border: 1.5px dashed; border-radius: 12px; padding: 13px 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: none; text-align: center; }
-.sheet-add-btn.asset { border-color: var(--green-light); color: var(--green-dark); background: var(--green-pale); }
-.sheet-add-btn.liability { border-color: #f0aab2; color: var(--red); background: var(--red-pale); }
-.sheet-section-label { font-size: 11px; font-weight: 700; color: var(--text-light); letter-spacing: 0.8px; margin: 18px 0 8px; }
-.sheet-item-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.sheet-item-row:last-child { border-bottom: none; }
 
 .toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -176,29 +194,37 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
     </div>
     <div class="nw-change" id="nw-change">No previous month available for comparison</div>
 
-    <div class="card">
-      <div class="card-title">Asset Allocation</div>
-      <div id="donut-section">
-        <div class="donut-wrap-sm">
-          <canvas id="donut-canvas" width="210" height="210"></canvas>
-          <div class="donut-center-sm">
-            <span class="donut-center-lbl">Total Assets</span>
-            <span class="donut-center-amt" id="donut-center-amt">₹0</span>
-          </div>
-        </div>
-        <div class="legend-list" id="legend-list"></div>
-      </div>
+    <div class="onboarding-card" id="onboarding-card" style="display:none;">
+      <div class="onboarding-icon">🌱</div>
+      <div class="onboarding-title">Welcome to Wealthly</div>
+      <div class="onboarding-text">Track everything you own and owe. Add your first asset or liability below to see your net worth take shape.</div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Net Worth Trend</div>
+    <div class="card" id="donut-card">
+      <div class="card-title">Asset Allocation</div>
+      <div class="donut-wrap-sm">
+        <canvas id="donut-canvas"></canvas>
+        <div class="donut-center-sm">
+          <span class="donut-center-lbl">Total Assets</span>
+          <span class="donut-center-amt" id="donut-center-amt">₹0</span>
+        </div>
+      </div>
+      <div class="legend-list" id="legend-list"></div>
+    </div>
+
+    <div class="card" id="trend-card">
+      <div class="card-title-row">
+        <div class="card-title">Net Worth Trend</div>
+        <span class="trend-badge neutral" id="trend-badge" style="display:none;"></span>
+      </div>
       <div class="period-row">
         <button class="period-btn" id="period-6" onclick="setPeriod('6')">6M</button>
         <button class="period-btn active" id="period-12" onclick="setPeriod('12')">12M</button>
         <button class="period-btn" id="period-all" onclick="setPeriod('all')">All</button>
       </div>
-      <div id="trend-section">
-        <canvas id="trend-canvas" width="360" height="160"></canvas>
+      <div class="trend-canvas-wrap" id="trend-wrap">
+        <canvas id="trend-canvas"></canvas>
+        <div class="trend-tooltip" id="trend-tooltip"></div>
       </div>
     </div>
 
@@ -232,31 +258,13 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 
   </div>
 
-  <div class="update-btn-wrap">
+  <div class="action-btn-wrap">
     <div class="inner">
-      <button class="update-btn" onclick="openUpdateSheet()">Update Wealth</button>
+      <button class="action-btn asset" onclick="openAssetForm(null)"><span class="action-btn-icon">+</span> Add Asset</button>
+      <button class="action-btn liability" onclick="openLiabilityForm(null)"><span class="action-btn-icon">+</span> Add Liability</button>
     </div>
   </div>
 
-</div>
-
-<!-- Update Wealth bottom sheet -->
-<div class="modal-overlay" id="modal-update">
-  <div class="modal-box">
-    <div class="modal-title">Update Wealth</div>
-    <div class="sheet-actions-row">
-      <button class="sheet-add-btn asset" onclick="openAssetForm(null, true)">+ Add Asset</button>
-      <button class="sheet-add-btn liability" onclick="openLiabilityForm(null, true)">+ Add Liability</button>
-    </div>
-    <div class="sheet-section-label">THIS MONTH'S ASSETS</div>
-    <div id="sheet-assets-list"></div>
-    <div class="sheet-section-label">THIS MONTH'S LIABILITIES</div>
-    <div id="sheet-liabilities-list"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-update')">Close</button>
-      <button class="btn-primary" onclick="saveSnapshot()">Save Snapshot</button>
-    </div>
-  </div>
 </div>
 
 <!-- Asset form modal -->
@@ -281,7 +289,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
     </div>
     <div class="modal-actions">
       <button class="btn-danger" id="asset-delete-btn" style="display:none;" onclick="deleteAsset()">Delete</button>
-      <button class="btn-secondary" onclick="closeAssetForm()">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('modal-asset')">Cancel</button>
       <button class="btn-primary" onclick="saveAsset()">Save</button>
     </div>
   </div>
@@ -309,7 +317,7 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
     </div>
     <div class="modal-actions">
       <button class="btn-danger" id="liability-delete-btn" style="display:none;" onclick="deleteLiability()">Delete</button>
-      <button class="btn-secondary" onclick="closeLiabilityForm()">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('modal-liability')">Cancel</button>
       <button class="btn-primary" onclick="saveLiability()">Save</button>
     </div>
   </div>
@@ -320,10 +328,10 @@ html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-f
 <script>
 const ASSET_CATS = [
   { id: 'bank_cash',  name: 'Bank and Cash',      icon: '🏦', color: '#5a9e6f' },
-  { id: 'stocks',     name: 'Stocks',             icon: '📈', color: '#4a8a5d' },
+  { id: 'stocks',     name: 'Stocks',             icon: '📈', color: '#3d7a52' },
   { id: 'mutual',     name: 'Mutual Funds',       icon: '📊', color: '#7dbf91' },
-  { id: 'fd',         name: 'Fixed Deposits',     icon: '🔒', color: '#6ab08a' },
-  { id: 'retire',     name: 'EPF, PPF and NPS',   icon: '🏛️', color: '#3d7a52' },
+  { id: 'fd',         name: 'Fixed Deposits',     icon: '🔒', color: '#a3d6b3' },
+  { id: 'retire',     name: 'EPF, PPF and NPS',   icon: '🏛️', color: '#2f6142' },
   { id: 'gold',       name: 'Gold',               icon: '🪙', color: '#c8a84a' },
   { id: 'realestate', name: 'Real Estate',        icon: '🏠', color: '#6a8ae0' },
   { id: 'business',   name: 'Business',           icon: '💼', color: '#a06acc' },
@@ -348,7 +356,7 @@ let trendPeriod = '12';
 let expandOpen = { assets: false, liabilities: false };
 let editingAssetId = null;
 let editingLiabilityId = null;
-let returnToUpdateSheet = false;
+let trendState = null; // { pointsPx, keys, values }
 
 function load() {
   const raw = localStorage.getItem('wealthly_snapshots');
@@ -387,7 +395,25 @@ function fmtINR(n) {
   const v = Math.round(Math.abs(n || 0));
   return '₹' + v.toLocaleString('en-IN');
 }
+function fmtSigned(n) { return (n < 0 ? '−' : '') + fmtINR(n); }
 function sumItems(items) { return items.reduce((s, i) => s + (parseFloat(i.value) || 0), 0); }
+function dpr() { return window.devicePixelRatio || 1; }
+function setupHiDPICanvas(canvas, cssW, cssH) {
+  const ratio = dpr();
+  canvas.width = Math.round(cssW * ratio);
+  canvas.height = Math.round(cssH * ratio);
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(ratio, ratio);
+  return ctx;
+}
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
 
 function updateMonthBars() {
   const m = state.currentMonth;
@@ -412,13 +438,20 @@ function renderAll() {
   const totalLiabilities = sumItems(snap.liabilities);
   const netWorth = totalAssets - totalLiabilities;
 
-  document.getElementById('nw-amount').textContent = (netWorth < 0 ? '−' : '') + fmtINR(netWorth);
+  document.getElementById('nw-amount').textContent = fmtSigned(netWorth);
   document.getElementById('nw-assets').textContent = fmtINR(totalAssets);
   document.getElementById('nw-liabilities').textContent = fmtINR(totalLiabilities);
 
+  const noRecords = snap.assets.length === 0 && snap.liabilities.length === 0;
+  document.getElementById('onboarding-card').style.display = noRecords ? 'block' : 'none';
+  document.getElementById('donut-card').style.display = noRecords ? 'none' : 'block';
+  document.getElementById('trend-card').style.display = noRecords ? 'none' : 'block';
+
   renderChange(key, netWorth);
-  renderDonut(snap, totalAssets);
-  renderTrend();
+  if (!noRecords) {
+    renderDonut(snap, totalAssets);
+    renderTrend();
+  }
   renderExpandSection('assets', snap.assets, totalAssets, ASSET_CATS);
   renderExpandSection('liabilities', snap.liabilities, totalLiabilities, LIAB_CATS);
 }
@@ -449,9 +482,10 @@ function renderChange(key, netWorth) {
   }
 }
 
+/* ---------- Donut ---------- */
 function renderDonut(snap, totalAssets) {
   const canvas = document.getElementById('donut-canvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = setupHiDPICanvas(canvas, 210, 210);
   const cx = 105, cy = 105, outerR = 100, innerR = 62;
   ctx.clearRect(0, 0, 210, 210);
   document.getElementById('donut-center-amt').textContent = fmtINR(totalAssets);
@@ -467,30 +501,32 @@ function renderDonut(snap, totalAssets) {
 
   if (totalAssets === 0 || segments.length === 0) {
     ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#dde'; ctx.lineWidth = outerR - innerR; ctx.stroke();
+    ctx.strokeStyle = '#e4eee8'; ctx.lineWidth = outerR - innerR; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff'; ctx.fill();
-    legend.innerHTML = '<div class="chart-empty">No assets added yet</div>';
+    legend.innerHTML = '<div class="chart-empty">No assets added yet.<br>Tap "Add Asset" below to get started.</div>';
     return;
   }
 
+  const single = segments.length === 1;
+  const gap = single ? 0 : 0.018; // small visual separation between slices
   let angle = -Math.PI / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(30,45,36,0.10)';
+  ctx.shadowBlur = 8;
   segments.forEach(seg => {
     const slice = (seg.total / totalAssets) * 2 * Math.PI;
+    const start = angle + gap / 2;
+    const end = angle + slice - gap / 2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, outerR, angle, angle + slice);
+    ctx.arc(cx, cy, outerR, start, Math.max(start, end));
     ctx.closePath();
     ctx.fillStyle = seg.cat.color;
     ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle));
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
     angle += slice;
   });
+  ctx.restore();
   ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
   ctx.fillStyle = '#ffffff'; ctx.fill();
 
@@ -505,6 +541,7 @@ function renderDonut(snap, totalAssets) {
   }).join('');
 }
 
+/* ---------- Trend chart ---------- */
 function setPeriod(p) {
   trendPeriod = p;
   ['6','12','all'].forEach(x => document.getElementById('period-' + x).classList.toggle('active', x === p));
@@ -512,95 +549,206 @@ function setPeriod(p) {
 }
 
 function renderTrend() {
+  const wrap = document.getElementById('trend-wrap');
   const canvas = document.getElementById('trend-canvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  const badge = document.getElementById('trend-badge');
+  const tooltip = document.getElementById('trend-tooltip');
+  tooltip.classList.remove('show');
 
   const curKey = currentKey();
   let keys = Object.keys(snapshots).filter(k => k <= curKey).sort();
   if (trendPeriod === '6') keys = keys.slice(-6);
   else if (trendPeriod === '12') keys = keys.slice(-12);
 
-  const section = document.getElementById('trend-section');
+  const cssW = Math.max(wrap.clientWidth, 240);
+  const cssH = 170;
+
+  // remove any previous empty message
+  const existingEmpty = document.getElementById('trend-empty');
+  if (existingEmpty) existingEmpty.remove();
+
   if (keys.length < 2) {
     canvas.style.display = 'none';
-    if (!document.getElementById('trend-empty')) {
-      const div = document.createElement('div');
-      div.id = 'trend-empty';
-      div.className = 'chart-empty';
-      div.textContent = 'Add snapshots for more months to see your trend';
-      section.appendChild(div);
-    }
+    badge.style.display = 'none';
+    trendState = null;
+    const div = document.createElement('div');
+    div.id = 'trend-empty';
+    div.className = 'chart-empty';
+    div.textContent = 'Add data across more months to see your trend line.';
+    wrap.appendChild(div);
     return;
   }
-  const emptyEl = document.getElementById('trend-empty');
-  if (emptyEl) emptyEl.remove();
   canvas.style.display = 'block';
 
-  const points = keys.map(k => {
-    const s = snapshots[k];
-    return { key: k, nw: sumItems(s.assets) - sumItems(s.liabilities) };
-  });
-  const values = points.map(p => p.nw);
+  const ctx = setupHiDPICanvas(canvas, cssW, cssH);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const values = keys.map(k => sumItems(snapshots[k].assets) - sumItems(snapshots[k].liabilities));
   let min = Math.min(...values), max = Math.max(...values);
   if (min === max) { min -= 1; max += 1; }
-  const padY = (max - min) * 0.15;
+  const padY = (max - min) * 0.18;
   min -= padY; max += padY;
 
-  const padding = { top: 14, right: 10, bottom: 22, left: 10 };
-  const chartW = W - padding.left - padding.right;
-  const chartH = H - padding.top - padding.bottom;
-
-  const xFor = i => padding.left + (points.length === 1 ? chartW / 2 : (i / (points.length - 1)) * chartW);
+  const padding = { top: 16, right: 8, bottom: 24, left: 8 };
+  const chartW = cssW - padding.left - padding.right;
+  const chartH = cssH - padding.top - padding.bottom;
+  const xFor = i => padding.left + (keys.length === 1 ? chartW / 2 : (i / (keys.length - 1)) * chartW);
   const yFor = v => padding.top + chartH - ((v - min) / (max - min)) * chartH;
 
+  const pointsPx = keys.map((k, i) => ({ key: k, x: xFor(i), y: yFor(values[i]), nw: values[i] }));
+
+  const overallDiff = values[values.length - 1] - values[0];
+  const overallPct = values[0] !== 0 ? (overallDiff / Math.abs(values[0])) * 100 : null;
+  const lineColor = overallDiff > 0 ? '#4a8a5d' : (overallDiff < 0 ? '#e05c6a' : '#8aaa96');
+  const fillColorTop = overallDiff >= 0 ? 'rgba(74,138,93,0.16)' : 'rgba(224,92,106,0.14)';
+  const fillColorBottom = overallDiff >= 0 ? 'rgba(74,138,93,0)' : 'rgba(224,92,106,0)';
+
+  if (overallDiff === 0) {
+    badge.style.display = 'none';
+  } else {
+    badge.style.display = 'inline-block';
+    badge.className = 'trend-badge ' + (overallDiff > 0 ? 'positive' : 'negative');
+    const pctStr = overallPct !== null ? ' (' + (overallPct > 0 ? '+' : '') + overallPct.toFixed(1) + '%)' : '';
+    badge.textContent = (overallDiff > 0 ? '↑ ' : '↓ ') + fmtINR(overallDiff) + pctStr;
+  }
+
+  trendState = { ctx, cssW, cssH, padding, chartH, pointsPx, min, max, lineColor, fillColorTop, fillColorBottom };
+  drawTrendChart(null);
+}
+
+function smoothPath(ctx, pts) {
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    const midX = (pts[i - 1].x + pts[i].x) / 2;
+    const midY = (pts[i - 1].y + pts[i].y) / 2;
+    ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, midX, midY);
+  }
+  ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+}
+
+function drawTrendChart(highlightIdx) {
+  if (!trendState) return;
+  const { ctx, cssW, cssH, padding, chartH, pointsPx, lineColor, fillColorTop, fillColorBottom } = trendState;
+  ctx.clearRect(0, 0, cssW, cssH);
+
   // gridlines
-  ctx.strokeStyle = '#e8f0ea';
+  ctx.strokeStyle = '#eef4f0';
   ctx.lineWidth = 1;
   for (let g = 0; g <= 2; g++) {
     const y = padding.top + (chartH / 2) * g;
-    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(W - padding.right, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(cssW - padding.right, y); ctx.stroke();
   }
 
-  // line
+  // gradient fill under smoothed line
   ctx.beginPath();
-  points.forEach((p, i) => {
-    const x = xFor(i), y = yFor(p.nw);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = '#4a8a5d';
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  // fill under line
-  ctx.lineTo(xFor(points.length - 1), padding.top + chartH);
-  ctx.lineTo(xFor(0), padding.top + chartH);
+  smoothPath(ctx, pointsPx);
+  ctx.lineTo(pointsPx[pointsPx.length - 1].x, padding.top + chartH);
+  ctx.lineTo(pointsPx[0].x, padding.top + chartH);
   ctx.closePath();
-  ctx.fillStyle = 'rgba(90,158,111,0.12)';
+  const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+  grad.addColorStop(0, fillColorTop);
+  grad.addColorStop(1, fillColorBottom);
+  ctx.fillStyle = grad;
   ctx.fill();
 
+  // smoothed line
+  ctx.beginPath();
+  smoothPath(ctx, pointsPx);
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
   // dots
-  points.forEach((p, i) => {
-    const x = xFor(i), y = yFor(p.nw);
-    ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
-    ctx.fillStyle = '#4a8a5d';
+  pointsPx.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.2, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
     ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = lineColor;
+    ctx.stroke();
   });
 
-  // x labels (show ~5 evenly spaced)
+  // x labels
   ctx.fillStyle = '#8aaa96';
   ctx.font = '10px -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  const labelStep = Math.max(1, Math.ceil(points.length / 5));
-  points.forEach((p, i) => {
-    if (i % labelStep === 0 || i === points.length - 1) {
-      ctx.fillText(keyToLabel(p.key), xFor(i), H - 6);
+  const labelStep = Math.max(1, Math.ceil(pointsPx.length / 5));
+  pointsPx.forEach((p, i) => {
+    if (i % labelStep === 0 || i === pointsPx.length - 1) {
+      ctx.fillText(keyToLabel(p.key), p.x, cssH - 6);
     }
   });
+
+  if (highlightIdx !== null && pointsPx[highlightIdx]) {
+    const p = pointsPx[highlightIdx];
+    ctx.beginPath();
+    ctx.setLineDash([3, 3]);
+    ctx.moveTo(p.x, padding.top);
+    ctx.lineTo(p.x, padding.top + chartH);
+    ctx.strokeStyle = '#c6d9cd';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = lineColor;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+  }
 }
 
+function nearestTrendIndex(clientX) {
+  const canvas = document.getElementById('trend-canvas');
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  let best = 0, bestDist = Infinity;
+  trendState.pointsPx.forEach((p, i) => {
+    const d = Math.abs(p.x - x);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best;
+}
+function showTrendPoint(idx) {
+  if (!trendState) return;
+  const p = trendState.pointsPx[idx];
+  drawTrendChart(idx);
+  const tooltip = document.getElementById('trend-tooltip');
+  tooltip.innerHTML = '<span class="trend-tooltip-month">' + keyToLabel(p.key) + '</span>' + fmtSigned(p.nw);
+  tooltip.style.left = p.x + 'px';
+  tooltip.style.top = p.y + 'px';
+  tooltip.classList.add('show');
+}
+function hideTrendPoint() {
+  if (!trendState) return;
+  drawTrendChart(null);
+  document.getElementById('trend-tooltip').classList.remove('show');
+}
+function handleTrendPointer(e) {
+  if (!trendState) return;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  showTrendPoint(nearestTrendIndex(clientX));
+}
+(function initTrendInteraction() {
+  const canvas = document.getElementById('trend-canvas');
+  canvas.addEventListener('mousemove', handleTrendPointer);
+  canvas.addEventListener('mouseleave', hideTrendPoint);
+  canvas.addEventListener('touchstart', handleTrendPointer, { passive: true });
+  canvas.addEventListener('touchmove', handleTrendPointer, { passive: true });
+  canvas.addEventListener('touchend', hideTrendPoint);
+})();
+let trendResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(trendResizeTimer);
+  trendResizeTimer = setTimeout(() => { if (document.getElementById('trend-card').style.display !== 'none') renderTrend(); }, 150);
+});
+
+/* ---------- Expandable sections ---------- */
 function toggleExpand(section) {
   expandOpen[section] = !expandOpen[section];
   document.getElementById(section + '-header').classList.toggle('open', expandOpen[section]);
@@ -613,18 +761,16 @@ function renderExpandSection(section, items, total, catList) {
   document.getElementById(section + '-sub').textContent = items.length + (items.length === 1 ? ' account' : ' accounts');
   const body = document.getElementById(section + '-body');
   if (items.length === 0) {
-    body.innerHTML = '<div class="empty-inline">No ' + section + ' added yet</div>';
+    body.innerHTML = section === 'assets'
+      ? '<div class="empty-state-block"><div class="empty-state-icon">💰</div><div class="empty-state-title">No Assets Yet</div><div class="empty-state-text">Add your first asset to start tracking your net worth.</div></div>'
+      : '<div class="empty-state-block"><div class="empty-state-icon">🎉</div><div class="empty-state-title">No Liabilities</div><div class="empty-state-text">You\'re currently debt free. Add a liability if applicable.</div></div>';
     return;
   }
   const sorted = [...items].sort((a, b) => (parseFloat(b.value) || 0) - (parseFloat(a.value) || 0));
   body.innerHTML = sorted.map(item => {
     const cat = getCat(item.catId, catList);
-    const editCall = section === 'assets'
-      ? "openAssetForm('" + item.id + "', false)"
-      : "openLiabilityForm('" + item.id + "', false)";
-    const delCall = section === 'assets'
-      ? "quickDeleteAsset('" + item.id + "')"
-      : "quickDeleteLiability('" + item.id + "')";
+    const editCall = section === 'assets' ? "openAssetForm('" + item.id + "')" : "openLiabilityForm('" + item.id + "')";
+    const delCall = section === 'assets' ? "quickDeleteAsset('" + item.id + "')" : "quickDeleteLiability('" + item.id + "')";
     return '<div class="item-row">' +
       '<div class="item-icon" style="background:' + cat.color + '22;">' + cat.icon + '</div>' +
       '<div class="item-info" onclick="' + editCall + '">' +
@@ -633,72 +779,11 @@ function renderExpandSection(section, items, total, catList) {
       '</div>' +
       '<span class="item-value">' + fmtINR(item.value) + '</span>' +
       '<div class="item-actions">' +
-        '<button class="icon-btn" onclick="' + editCall + '">✏️</button>' +
-        '<button class="icon-btn" onclick="' + delCall + '">🗑️</button>' +
+        '<button class="icon-btn" onclick="' + editCall + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>' +
+        '<button class="icon-btn" onclick="' + delCall + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>' +
       '</div>' +
     '</div>';
   }).join('');
-}
-
-function escapeHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-/* ---------- Update Wealth sheet ---------- */
-function openUpdateSheet() {
-  renderUpdateSheetLists();
-  openModal('modal-update');
-}
-function renderUpdateSheetLists() {
-  const snap = getSnapshot(currentKey());
-  const assetsList = document.getElementById('sheet-assets-list');
-  const liabList = document.getElementById('sheet-liabilities-list');
-
-  assetsList.innerHTML = snap.assets.length === 0
-    ? '<div class="empty-inline">No assets yet</div>'
-    : snap.assets.map(item => {
-      const cat = getCat(item.catId, ASSET_CATS);
-      return '<div class="sheet-item-row">' +
-        '<div class="item-icon" style="background:' + cat.color + '22;">' + cat.icon + '</div>' +
-        '<div class="item-info" onclick="openAssetForm(\'' + item.id + '\', true)">' +
-          '<div class="item-name">' + escapeHtml(item.name) + '</div>' +
-          '<div class="item-cat">' + cat.name + '</div>' +
-        '</div>' +
-        '<span class="item-value">' + fmtINR(item.value) + '</span>' +
-        '<div class="item-actions">' +
-          '<button class="icon-btn" onclick="openAssetForm(\'' + item.id + '\', true)">✏️</button>' +
-          '<button class="icon-btn" onclick="quickDeleteAsset(\'' + item.id + '\')">🗑️</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-
-  liabList.innerHTML = snap.liabilities.length === 0
-    ? '<div class="empty-inline">No liabilities yet</div>'
-    : snap.liabilities.map(item => {
-      const cat = getCat(item.catId, LIAB_CATS);
-      return '<div class="sheet-item-row">' +
-        '<div class="item-icon" style="background:' + cat.color + '22;">' + cat.icon + '</div>' +
-        '<div class="item-info" onclick="openLiabilityForm(\'' + item.id + '\', true)">' +
-          '<div class="item-name">' + escapeHtml(item.name) + '</div>' +
-          '<div class="item-cat">' + cat.name + '</div>' +
-        '</div>' +
-        '<span class="item-value">' + fmtINR(item.value) + '</span>' +
-        '<div class="item-actions">' +
-          '<button class="icon-btn" onclick="openLiabilityForm(\'' + item.id + '\', true)">✏️</button>' +
-          '<button class="icon-btn" onclick="quickDeleteLiability(\'' + item.id + '\')">🗑️</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-}
-function saveSnapshot() {
-  const snap = getSnapshot(currentKey());
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  closeModal('modal-update');
-  renderAll();
-  showToast('Wealth updated!');
 }
 
 /* ---------- Asset form ---------- */
@@ -707,11 +792,9 @@ function populateAssetCategories() {
   sel.innerHTML = '<option value="">Select category</option>' +
     ASSET_CATS.map(c => '<option value="' + c.id + '">' + c.icon + ' ' + c.name + '</option>').join('');
 }
-function openAssetForm(id, fromSheet) {
+function openAssetForm(id) {
   populateAssetCategories();
-  returnToUpdateSheet = !!fromSheet;
   editingAssetId = id;
-  if (fromSheet) closeModal('modal-update');
   if (id) {
     const snap = getSnapshot(currentKey());
     const item = snap.assets.find(a => a.id === id);
@@ -730,10 +813,6 @@ function openAssetForm(id, fromSheet) {
     document.getElementById('asset-delete-btn').style.display = 'none';
   }
   openModal('modal-asset');
-}
-function closeAssetForm() {
-  closeModal('modal-asset');
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
 }
 function saveAsset() {
   const name = document.getElementById('asset-name').value.trim();
@@ -757,7 +836,6 @@ function saveAsset() {
   save();
   closeModal('modal-asset');
   renderAll();
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
   showToast('Asset saved!');
 }
 function deleteAsset() {
@@ -768,7 +846,6 @@ function deleteAsset() {
   save();
   closeModal('modal-asset');
   renderAll();
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
   showToast('Asset deleted');
 }
 function quickDeleteAsset(id) {
@@ -777,7 +854,6 @@ function quickDeleteAsset(id) {
   snap.lastUpdated = new Date().toISOString();
   save();
   renderAll();
-  if (document.getElementById('modal-update').classList.contains('open')) renderUpdateSheetLists();
   showToast('Asset deleted');
 }
 
@@ -787,11 +863,9 @@ function populateLiabilityCategories() {
   sel.innerHTML = '<option value="">Select category</option>' +
     LIAB_CATS.map(c => '<option value="' + c.id + '">' + c.icon + ' ' + c.name + '</option>').join('');
 }
-function openLiabilityForm(id, fromSheet) {
+function openLiabilityForm(id) {
   populateLiabilityCategories();
-  returnToUpdateSheet = !!fromSheet;
   editingLiabilityId = id;
-  if (fromSheet) closeModal('modal-update');
   if (id) {
     const snap = getSnapshot(currentKey());
     const item = snap.liabilities.find(l => l.id === id);
@@ -810,10 +884,6 @@ function openLiabilityForm(id, fromSheet) {
     document.getElementById('liability-delete-btn').style.display = 'none';
   }
   openModal('modal-liability');
-}
-function closeLiabilityForm() {
-  closeModal('modal-liability');
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
 }
 function saveLiability() {
   const name = document.getElementById('liability-name').value.trim();
@@ -837,7 +907,6 @@ function saveLiability() {
   save();
   closeModal('modal-liability');
   renderAll();
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
   showToast('Liability saved!');
 }
 function deleteLiability() {
@@ -848,7 +917,6 @@ function deleteLiability() {
   save();
   closeModal('modal-liability');
   renderAll();
-  if (returnToUpdateSheet) { renderUpdateSheetLists(); openModal('modal-update'); }
   showToast('Liability deleted');
 }
 function quickDeleteLiability(id) {
@@ -857,7 +925,6 @@ function quickDeleteLiability(id) {
   snap.lastUpdated = new Date().toISOString();
   save();
   renderAll();
-  if (document.getElementById('modal-update').classList.contains('open')) renderUpdateSheetLists();
   showToast('Liability deleted');
 }
 
