@@ -392,6 +392,25 @@ let trendState = null; // { pointsPx, keys, values }
 function load() {
   const raw = localStorage.getItem('wealthly_snapshots');
   snapshots = raw ? JSON.parse(raw) : {};
+  // Self-heal: a month with nothing in it carries no information, so it
+  // shouldn't be pinned as its own empty record — that would block it from
+  // ever inheriting carried-forward balances. This also cleans up any
+  // already-empty months left over from earlier use.
+  let pruned = false;
+  Object.keys(snapshots).forEach(k => {
+    const s = snapshots[k];
+    if ((s.assets || []).length === 0 && (s.liabilities || []).length === 0) {
+      delete snapshots[k];
+      pruned = true;
+    }
+  });
+  if (pruned) save();
+}
+function pruneIfEmpty(key) {
+  const snap = snapshots[key];
+  if (snap && snap.assets.length === 0 && snap.liabilities.length === 0) {
+    delete snapshots[key];
+  }
 }
 function save() {
   localStorage.setItem('wealthly_snapshots', JSON.stringify(snapshots));
@@ -895,6 +914,7 @@ function deleteAsset() {
   const snap = materializeSnapshot(currentKey());
   snap.assets = snap.assets.filter(a => a.id !== editingAssetId);
   snap.lastUpdated = new Date().toISOString();
+  pruneIfEmpty(currentKey());
   save();
   closeModal('modal-asset');
   renderAll();
@@ -904,6 +924,7 @@ function quickDeleteAsset(id) {
   const snap = materializeSnapshot(currentKey());
   snap.assets = snap.assets.filter(a => a.id !== id);
   snap.lastUpdated = new Date().toISOString();
+  pruneIfEmpty(currentKey());
   save();
   renderAll();
   showToast('Asset deleted');
@@ -966,6 +987,7 @@ function deleteLiability() {
   const snap = materializeSnapshot(currentKey());
   snap.liabilities = snap.liabilities.filter(l => l.id !== editingLiabilityId);
   snap.lastUpdated = new Date().toISOString();
+  pruneIfEmpty(currentKey());
   save();
   closeModal('modal-liability');
   renderAll();
@@ -975,6 +997,7 @@ function quickDeleteLiability(id) {
   const snap = materializeSnapshot(currentKey());
   snap.liabilities = snap.liabilities.filter(l => l.id !== id);
   snap.lastUpdated = new Date().toISOString();
+  pruneIfEmpty(currentKey());
   save();
   renderAll();
   showToast('Liability deleted');
