@@ -105,6 +105,12 @@ body { background: #eef3f8; }
 .trend-tooltip { position: absolute; pointer-events: none; background: var(--text-dark); color: white; font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; transform: translate(-50%, -120%); white-space: nowrap; opacity: 0; transition: opacity 0.12s ease; z-index: 5; }
 .trend-tooltip.show { opacity: 1; }
 .trend-tooltip-month { font-size: 10px; font-weight: 500; opacity: 0.75; display: block; }
+.trend-tooltip-state { font-size: 10px; font-weight: 500; opacity: 0.72; display: block; margin-top: 1px; }
+.trend-key { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px; margin-top: 10px; color: var(--text-mid); font-size: 10.5px; }
+.trend-key-item { display: inline-flex; align-items: center; gap: 5px; }
+.trend-key-line { width: 18px; height: 0; border-top: 2px solid var(--text-mid); }
+.trend-key-line.inherited { border-top-style: dashed; opacity: 0.72; }
+.trend-key-line.missing { border-top-color: var(--border); border-top-style: dotted; }
 
 /* Expandable Assets / Liabilities sections */
 .expand-section { margin-bottom: 14px; }
@@ -180,8 +186,11 @@ body { background: #eef3f8; }
 input:checked + .toggle-slider { background: var(--green-mid); }
 input:checked + .toggle-slider:before { transform: translateX(22px); }
 
-.toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; }
+.toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 12px 10px 18px; border-radius: 22px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; display: flex; align-items: center; gap: 12px; pointer-events: none; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.show { pointer-events: auto; }
+.toast-action { display: none; border: 0; border-radius: 16px; padding: 6px 10px; background: white; color: var(--text-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.toast-action.show { display: inline-flex; }
 </style>
 </head>
 <body>
@@ -252,6 +261,11 @@ input:checked + .toggle-slider:before { transform: translateX(22px); }
       <div class="trend-canvas-wrap" id="trend-wrap">
         <canvas id="trend-canvas"></canvas>
         <div class="trend-tooltip" id="trend-tooltip"></div>
+      </div>
+      <div class="trend-key" aria-label="Trend chart key">
+        <span class="trend-key-item"><span class="trend-key-line"></span>Recorded</span>
+        <span class="trend-key-item"><span class="trend-key-line inherited"></span>Carried forward</span>
+        <span class="trend-key-item"><span class="trend-key-line missing"></span>No data</span>
       </div>
     </div>
 
@@ -376,7 +390,10 @@ input:checked + .toggle-slider:before { transform: translateX(22px); }
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toast-message"></span>
+  <button class="toast-action" id="toast-action" type="button"></button>
+</div>
 
 <script>
 const ASSET_CATS = [
@@ -415,25 +432,6 @@ let trendState = null; // { pointsPx, keys, values }
 function load() {
   const raw = localStorage.getItem('wealthly_snapshots');
   snapshots = raw ? JSON.parse(raw) : {};
-  // Self-heal: a month with nothing in it carries no information, so it
-  // shouldn't be pinned as its own empty record — that would block it from
-  // ever inheriting carried-forward balances. This also cleans up any
-  // already-empty months left over from earlier use.
-  let pruned = false;
-  Object.keys(snapshots).forEach(k => {
-    const s = snapshots[k];
-    if ((s.assets || []).length === 0 && (s.liabilities || []).length === 0) {
-      delete snapshots[k];
-      pruned = true;
-    }
-  });
-  if (pruned) save();
-}
-function pruneIfEmpty(key) {
-  const snap = snapshots[key];
-  if (snap && snap.assets.length === 0 && snap.liabilities.length === 0) {
-    delete snapshots[key];
-  }
 }
 function save() {
   localStorage.setItem('wealthly_snapshots', JSON.stringify(snapshots));
@@ -449,32 +447,60 @@ function saveSettings() {
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function monthKey(y, m) { return y + '-' + pad2(m + 1); }
 function currentKey() { return monthKey(state.currentYear, state.currentMonth); }
+function hasOwnSnapshot(key) { return Object.prototype.hasOwnProperty.call(snapshots, key); }
 function keyToLabel(key) {
   const [y, m] = key.split('-').map(Number);
   return MONTHS_SHORT[m - 1] + ' ' + y;
+}
+function shiftMonthKey(key, offset) {
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(y, m - 1 + offset, 1);
+  return monthKey(d.getFullYear(), d.getMonth());
+}
+function monthRange(startKey, endKey) {
+  const keys = [];
+  for (let key = startKey; key <= endKey; key = shiftMonthKey(key, 1)) keys.push(key);
+  return keys;
+}
+
+// Returns both the value shown for a month and where that value came from.
+// An explicitly saved empty month remains recorded and never inherits again.
+function getSnapshotMeta(key) {
+  if (hasOwnSnapshot(key)) {
+    return { snapshot: snapshots[key], status: 'recorded', sourceKey: key };
+  }
+  if (settings.carryForward) {
+    const priorKeys = Object.keys(snapshots).filter(k => k < key).sort();
+    if (priorKeys.length) {
+      const sourceKey = priorKeys[priorKeys.length - 1];
+      const prev = snapshots[sourceKey];
+      return {
+        snapshot: {
+          assets: JSON.parse(JSON.stringify(prev.assets || [])),
+          liabilities: JSON.parse(JSON.stringify(prev.liabilities || [])),
+          lastUpdated: prev.lastUpdated || null,
+        },
+        status: 'inherited',
+        sourceKey,
+      };
+    }
+  }
+  return {
+    snapshot: { assets: [], liabilities: [], lastUpdated: null },
+    status: 'missing',
+    sourceKey: null,
+  };
 }
 
 // Read-only: for display. Never writes to `snapshots`, so simply viewing a
 // month never "locks in" an empty snapshot that would block later carry-forward.
 function computeDisplaySnapshot(key) {
-  if (snapshots[key]) return snapshots[key];
-  if (settings.carryForward) {
-    const priorKeys = Object.keys(snapshots).filter(k => k < key).sort();
-    if (priorKeys.length) {
-      const prev = snapshots[priorKeys[priorKeys.length - 1]];
-      return {
-        assets: JSON.parse(JSON.stringify(prev.assets)),
-        liabilities: JSON.parse(JSON.stringify(prev.liabilities)),
-        lastUpdated: null,
-      };
-    }
-  }
-  return { assets: [], liabilities: [], lastUpdated: null };
+  return getSnapshotMeta(key).snapshot;
 }
 
 // Write path: actually creates/stores the month's snapshot the first time it's edited.
 function materializeSnapshot(key) {
-  if (snapshots[key]) return snapshots[key];
+  if (hasOwnSnapshot(key)) return snapshots[key];
   const display = computeDisplaySnapshot(key);
   snapshots[key] = {
     assets: JSON.parse(JSON.stringify(display.assets)),
@@ -537,15 +563,14 @@ function renderAll() {
   document.getElementById('nw-liabilities').textContent = fmtINR(totalLiabilities);
 
   const noRecords = snap.assets.length === 0 && snap.liabilities.length === 0;
-  document.getElementById('onboarding-card').style.display = noRecords ? 'block' : 'none';
+  const hasHistoryThroughCurrent = Object.keys(snapshots).some(snapshotKey => snapshotKey <= key);
+  document.getElementById('onboarding-card').style.display = noRecords && !hasHistoryThroughCurrent ? 'block' : 'none';
   document.getElementById('donut-card').style.display = noRecords ? 'none' : 'block';
-  document.getElementById('trend-card').style.display = noRecords ? 'none' : 'block';
+  document.getElementById('trend-card').style.display = hasHistoryThroughCurrent ? 'block' : 'none';
 
   renderChange(key, netWorth);
-  if (!noRecords) {
-    renderDonut(snap, totalAssets);
-    renderTrend();
-  }
+  if (!noRecords) renderDonut(snap, totalAssets);
+  if (hasHistoryThroughCurrent) renderTrend();
   renderExpandSection('assets', snap.assets, totalAssets, ASSET_CATS);
   renderExpandSection('liabilities', snap.liabilities, totalLiabilities, LIAB_CATS);
 }
@@ -555,13 +580,14 @@ function renderChange(key, netWorth) {
   const prevDate = new Date(y, m - 2, 1);
   const prevKey = monthKey(prevDate.getFullYear(), prevDate.getMonth());
   const el = document.getElementById('nw-change');
-  if (!snapshots[prevKey]) {
+  const prevMeta = getSnapshotMeta(prevKey);
+  if (prevMeta.status === 'missing') {
     el.textContent = 'No previous month available for comparison';
     el.className = 'nw-change neutral';
     return;
   }
-  const prevAssets = sumItems(snapshots[prevKey].assets);
-  const prevLiab = sumItems(snapshots[prevKey].liabilities);
+  const prevAssets = sumItems(prevMeta.snapshot.assets);
+  const prevLiab = sumItems(prevMeta.snapshot.liabilities);
   const prevNW = prevAssets - prevLiab;
   const diff = netWorth - prevNW;
   if (diff === 0) {
@@ -666,18 +692,29 @@ function renderTrend() {
   tooltip.classList.remove('show');
 
   const curKey = currentKey();
-  let keys = Object.keys(snapshots).filter(k => k <= curKey).sort();
-  if (trendPeriod === '6') keys = keys.slice(-6);
-  else if (trendPeriod === '12') keys = keys.slice(-12);
+  const recordedKeys = Object.keys(snapshots).filter(k => k <= curKey).sort();
+  let startKey;
+  if (trendPeriod === '6') startKey = shiftMonthKey(curKey, -5);
+  else if (trendPeriod === '12') startKey = shiftMonthKey(curKey, -11);
+  else startKey = recordedKeys[0] || curKey;
+  const keys = monthRange(startKey, curKey);
+  const series = keys.map(key => {
+    const meta = getSnapshotMeta(key);
+    const nw = meta.status === 'missing'
+      ? null
+      : sumItems(meta.snapshot.assets) - sumItems(meta.snapshot.liabilities);
+    return { key, nw, status: meta.status, sourceKey: meta.sourceKey };
+  });
+  const available = series.filter(point => point.nw !== null);
 
   const cssW = Math.max(wrap.clientWidth, 240);
-  const cssH = 170;
+  const cssH = 180;
 
   // remove any previous empty message
   const existingEmpty = document.getElementById('trend-empty');
   if (existingEmpty) existingEmpty.remove();
 
-  if (keys.length < 2) {
+  if (available.length < 2) {
     canvas.style.display = 'none';
     badge.style.display = 'none';
     trendState = null;
@@ -693,9 +730,13 @@ function renderTrend() {
   const ctx = setupHiDPICanvas(canvas, cssW, cssH);
   ctx.clearRect(0, 0, cssW, cssH);
 
-  const values = keys.map(k => sumItems(snapshots[k].assets) - sumItems(snapshots[k].liabilities));
+  const values = available.map(point => point.nw);
   let min = Math.min(...values), max = Math.max(...values);
-  if (min === max) { min -= 1; max += 1; }
+  if (min === max) {
+    const spread = Math.max(Math.abs(max) * 0.08, 1);
+    min -= spread;
+    max += spread;
+  }
   const padY = (max - min) * 0.18;
   min -= padY; max += padY;
 
@@ -705,13 +746,15 @@ function renderTrend() {
   const xFor = i => padding.left + (keys.length === 1 ? chartW / 2 : (i / (keys.length - 1)) * chartW);
   const yFor = v => padding.top + chartH - ((v - min) / (max - min)) * chartH;
 
-  const pointsPx = keys.map((k, i) => ({ key: k, x: xFor(i), y: yFor(values[i]), nw: values[i] }));
+  const pointsPx = series.map((point, i) => ({
+    ...point,
+    x: xFor(i),
+    y: point.nw === null ? null : yFor(point.nw),
+  }));
 
-  const overallDiff = values[values.length - 1] - values[0];
-  const overallPct = values[0] !== 0 ? (overallDiff / Math.abs(values[0])) * 100 : null;
+  const overallDiff = available[available.length - 1].nw - available[0].nw;
+  const overallPct = available[0].nw !== 0 ? (overallDiff / Math.abs(available[0].nw)) * 100 : null;
   const lineColor = overallDiff > 0 ? '#10b981' : (overallDiff < 0 ? '#ff6568' : '#8497ab');
-  const fillColorTop = overallDiff >= 0 ? 'rgba(16,185,129,0.16)' : 'rgba(255,101,104,0.14)';
-  const fillColorBottom = overallDiff >= 0 ? 'rgba(16,185,129,0)' : 'rgba(255,101,104,0)';
 
   if (overallDiff === 0) {
     badge.style.display = 'none';
@@ -722,23 +765,13 @@ function renderTrend() {
     badge.textContent = (overallDiff > 0 ? '↑ ' : '↓ ') + fmtINR(overallDiff) + pctStr;
   }
 
-  trendState = { ctx, cssW, cssH, padding, chartH, pointsPx, min, max, lineColor, fillColorTop, fillColorBottom };
+  trendState = { ctx, cssW, cssH, padding, chartH, pointsPx, min, max, lineColor };
   drawTrendChart(null);
-}
-
-function smoothPath(ctx, pts) {
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    const midX = (pts[i - 1].x + pts[i].x) / 2;
-    const midY = (pts[i - 1].y + pts[i].y) / 2;
-    ctx.quadraticCurveTo(pts[i - 1].x, pts[i - 1].y, midX, midY);
-  }
-  ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
 }
 
 function drawTrendChart(highlightIdx) {
   if (!trendState) return;
-  const { ctx, cssW, cssH, padding, chartH, pointsPx, lineColor, fillColorTop, fillColorBottom } = trendState;
+  const { ctx, cssW, cssH, padding, chartH, pointsPx, lineColor } = trendState;
   ctx.clearRect(0, 0, cssW, cssH);
 
   // gridlines
@@ -749,37 +782,36 @@ function drawTrendChart(highlightIdx) {
     ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(cssW - padding.right, y); ctx.stroke();
   }
 
-  // gradient fill under smoothed line
-  ctx.beginPath();
-  smoothPath(ctx, pointsPx);
-  ctx.lineTo(pointsPx[pointsPx.length - 1].x, padding.top + chartH);
-  ctx.lineTo(pointsPx[0].x, padding.top + chartH);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-  grad.addColorStop(0, fillColorTop);
-  grad.addColorStop(1, fillColorBottom);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // smoothed line
-  ctx.beginPath();
-  smoothPath(ctx, pointsPx);
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.stroke();
+  // Draw one segment per calendar-month interval. Gaps mean no data, while
+  // dashed segments clearly identify carried-forward values.
+  for (let i = 1; i < pointsPx.length; i++) {
+    const prev = pointsPx[i - 1];
+    const point = pointsPx[i];
+    if (prev.nw === null || point.nw === null) continue;
+    ctx.beginPath();
+    ctx.setLineDash(prev.status === 'inherited' || point.status === 'inherited' ? [5, 4] : []);
+    ctx.moveTo(prev.x, prev.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
 
   // dots
   pointsPx.forEach(p => {
+    if (p.nw === null) return;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 3.2, 0, 2 * Math.PI);
-    ctx.fillStyle = '#ffffff';
+    ctx.setLineDash(p.status === 'inherited' ? [2, 2] : []);
+    ctx.arc(p.x, p.y, p.status === 'inherited' ? 3 : 3.4, 0, 2 * Math.PI);
+    ctx.fillStyle = p.status === 'inherited' ? '#edf4fb' : '#ffffff';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = lineColor;
     ctx.stroke();
   });
+  ctx.setLineDash([]);
 
   // x labels
   ctx.fillStyle = '#8497ab';
@@ -792,7 +824,7 @@ function drawTrendChart(highlightIdx) {
     }
   });
 
-  if (highlightIdx !== null && pointsPx[highlightIdx]) {
+  if (highlightIdx !== null && pointsPx[highlightIdx] && pointsPx[highlightIdx].nw !== null) {
     const p = pointsPx[highlightIdx];
     ctx.beginPath();
     ctx.setLineDash([3, 3]);
@@ -817,19 +849,24 @@ function nearestTrendIndex(clientX) {
   const canvas = document.getElementById('trend-canvas');
   const rect = canvas.getBoundingClientRect();
   const x = clientX - rect.left;
-  let best = 0, bestDist = Infinity;
+  let best = null, bestDist = Infinity;
   trendState.pointsPx.forEach((p, i) => {
+    if (p.nw === null) return;
     const d = Math.abs(p.x - x);
     if (d < bestDist) { bestDist = d; best = i; }
   });
   return best;
 }
 function showTrendPoint(idx) {
-  if (!trendState) return;
+  if (!trendState || idx === null) return;
   const p = trendState.pointsPx[idx];
   drawTrendChart(idx);
   const tooltip = document.getElementById('trend-tooltip');
-  tooltip.innerHTML = '<span class="trend-tooltip-month">' + keyToLabel(p.key) + '</span>' + fmtSigned(p.nw);
+  const stateLabel = p.status === 'inherited'
+    ? 'Carried forward from ' + keyToLabel(p.sourceKey)
+    : 'Recorded value';
+  tooltip.innerHTML = '<span class="trend-tooltip-month">' + keyToLabel(p.key) + '</span>' +
+    fmtSigned(p.nw) + '<span class="trend-tooltip-state">' + stateLabel + '</span>';
   tooltip.style.left = p.x + 'px';
   tooltip.style.top = p.y + 'px';
   tooltip.classList.add('show');
@@ -962,23 +999,30 @@ function saveAsset() {
 }
 function deleteAsset() {
   if (!editingAssetId) return;
+  const item = computeDisplaySnapshot(currentKey()).assets.find(a => a.id === editingAssetId);
+  if (!item) return;
+  if (!window.confirm('Delete "' + item.name + '"? This cannot be undone.')) return;
   const snap = materializeSnapshot(currentKey());
   snap.assets = snap.assets.filter(a => a.id !== editingAssetId);
   snap.lastUpdated = new Date().toISOString();
-  pruneIfEmpty(currentKey());
   save();
   closeModal('modal-asset');
   renderAll();
   showToast('Asset deleted');
 }
 function quickDeleteAsset(id) {
-  const snap = materializeSnapshot(currentKey());
-  snap.assets = snap.assets.filter(a => a.id !== id);
+  const key = currentKey();
+  const item = computeDisplaySnapshot(key).assets.find(asset => asset.id === id);
+  if (!item) return;
+  if (!window.confirm('Are you sure you want to delete "' + item.name + '"?')) return;
+  const snap = materializeSnapshot(key);
+  const index = snap.assets.findIndex(a => a.id === id);
+  if (index < 0) return;
+  const removed = snap.assets.splice(index, 1)[0];
   snap.lastUpdated = new Date().toISOString();
-  pruneIfEmpty(currentKey());
   save();
   renderAll();
-  showToast('Asset deleted');
+  showToast('Asset deleted', 'Undo', () => restoreDeletedItem(key, 'assets', removed, index));
 }
 
 /* ---------- Liability form ---------- */
@@ -1035,23 +1079,40 @@ function saveLiability() {
 }
 function deleteLiability() {
   if (!editingLiabilityId) return;
+  const item = computeDisplaySnapshot(currentKey()).liabilities.find(l => l.id === editingLiabilityId);
+  if (!item) return;
+  if (!window.confirm('Delete "' + item.name + '"? This cannot be undone.')) return;
   const snap = materializeSnapshot(currentKey());
   snap.liabilities = snap.liabilities.filter(l => l.id !== editingLiabilityId);
   snap.lastUpdated = new Date().toISOString();
-  pruneIfEmpty(currentKey());
   save();
   closeModal('modal-liability');
   renderAll();
   showToast('Liability deleted');
 }
 function quickDeleteLiability(id) {
-  const snap = materializeSnapshot(currentKey());
-  snap.liabilities = snap.liabilities.filter(l => l.id !== id);
+  const key = currentKey();
+  const item = computeDisplaySnapshot(key).liabilities.find(liability => liability.id === id);
+  if (!item) return;
+  if (!window.confirm('Are you sure you want to delete "' + item.name + '"?')) return;
+  const snap = materializeSnapshot(key);
+  const index = snap.liabilities.findIndex(l => l.id === id);
+  if (index < 0) return;
+  const removed = snap.liabilities.splice(index, 1)[0];
   snap.lastUpdated = new Date().toISOString();
-  pruneIfEmpty(currentKey());
   save();
   renderAll();
-  showToast('Liability deleted');
+  showToast('Liability deleted', 'Undo', () => restoreDeletedItem(key, 'liabilities', removed, index));
+}
+
+function restoreDeletedItem(key, collection, item, index) {
+  const snap = materializeSnapshot(key);
+  if (snap[collection].some(existing => existing.id === item.id)) return;
+  snap[collection].splice(Math.min(index, snap[collection].length), 0, item);
+  snap.lastUpdated = new Date().toISOString();
+  save();
+  renderAll();
+  showToast(collection === 'assets' ? 'Asset restored' : 'Liability restored');
 }
 
 /* ---------- Settings ---------- */
@@ -1071,10 +1132,37 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
-function showToast(msg) {
+let toastTimer = null;
+let pendingToastAction = null;
+function hideToast() {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  t.classList.remove('show');
+  const actionBtn = document.getElementById('toast-action');
+  actionBtn.classList.remove('show');
+  actionBtn.onclick = null;
+  pendingToastAction = null;
+}
+function showToast(msg, actionLabel = null, action = null) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  const message = document.getElementById('toast-message');
+  const actionBtn = document.getElementById('toast-action');
+  message.textContent = msg;
+  pendingToastAction = action;
+  if (actionLabel && action) {
+    actionBtn.textContent = actionLabel;
+    actionBtn.classList.add('show');
+    actionBtn.onclick = () => {
+      const callback = pendingToastAction;
+      hideToast();
+      if (callback) callback();
+    };
+  } else {
+    actionBtn.classList.remove('show');
+    actionBtn.onclick = null;
+  }
+  t.classList.add('show');
+  toastTimer = setTimeout(hideToast, action ? 5000 : 2200);
 }
 
 load();
