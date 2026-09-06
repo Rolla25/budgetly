@@ -513,8 +513,8 @@ function materializeSnapshot(key) {
 
 function getCat(id, list) { return list.find(c => c.id === id) || { name: 'Unknown', icon: '❓', color: '#aaa' }; }
 function fmtINR(n) {
-  const v = Math.round(Math.abs(n || 0));
-  return '₹' + v.toLocaleString('en-IN');
+  const v = Math.abs(Number(n) || 0);
+  return '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtSigned(n) { return (n < 0 ? '−' : '') + fmtINR(n); }
 function sumItems(items) { return items.reduce((s, i) => s + (parseFloat(i.value) || 0), 0); }
@@ -983,7 +983,7 @@ function saveAsset() {
 
   if (!name) { showToast('Enter an asset name'); return; }
   if (!catId) { showToast('Select a category'); return; }
-  if (valueRaw === '' || isNaN(value) || value < 0) { showToast('Enter a valid value'); return; }
+  if (valueRaw === '' || !Number.isFinite(value) || value < 0) { showToast('Enter a valid value'); return; }
 
   const snap = materializeSnapshot(currentKey());
   if (editingAssetId) {
@@ -1063,7 +1063,7 @@ function saveLiability() {
 
   if (!name) { showToast('Enter a liability name'); return; }
   if (!catId) { showToast('Select a category'); return; }
-  if (valueRaw === '' || isNaN(value) || value < 0) { showToast('Enter a valid amount'); return; }
+  if (valueRaw === '' || !Number.isFinite(value) || value < 0) { showToast('Enter a valid amount'); return; }
 
   const snap = materializeSnapshot(currentKey());
   if (editingLiabilityId) {
