@@ -977,7 +977,8 @@ function renderDateListView() {
   const sortedDates = Object.keys(dateGroups).sort((a, b) => b.localeCompare(a));
   sortedDates.forEach(date => {
     const group = dateGroups[date];
-    const netExpense = group.txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const dailyNet = group.txs.reduce((sum, tx) =>
+      sum + (tx.type === 'income' ? tx.amount : -tx.amount), 0);
     const dgId = 'dg-' + date.replace(/-/g,'');
     const div = document.createElement('div');
     div.className = 'date-group';
@@ -985,7 +986,8 @@ function renderDateListView() {
       '<span class="date-group-chevron open">▼</span>' +
       '<span class="date-group-label">' + fmtDateShort(date) + '</span>' +
       '<span class="date-group-count">' + group.txs.length + '</span>' +
-      '<span class="date-group-total">' + (netExpense > 0 ? '−' : '') + fmtAmt(netExpense) + '</span>' +
+      '<span class="date-group-total" style="color:' + (dailyNet > 0 ? 'var(--green-dark)' : (dailyNet < 0 ? 'var(--red)' : 'var(--text-light)')) + ';">' +
+      (dailyNet > 0 ? '+' : (dailyNet < 0 ? '−' : '')) + fmtAmt(Math.abs(dailyNet)) + '</span>' +
       '</div>' +
       '<div class="date-group-items open" id="' + dgId + '">' +
       group.txs.sort((a,b)=>parseInt(b.id)-parseInt(a.id)).map(tx => {
@@ -1086,7 +1088,7 @@ function numpadAction(key) {
 function saveTx() {
   let amount;
   try { amount = parseFloat(Function('"use strict";return(' + amountStr + ')')());} catch(e){amount=0;}
-  if (!amount || amount <= 0) { showToast('Enter a valid amount'); return; }
+  if (!Number.isFinite(amount) || amount <= 0) { showToast('Enter a valid amount'); return; }
   if (!selectedCatId) { showToast('Choose a category'); return; }
   if (editingTxId) {
     const idx = state.transactions.findIndex(t => t.id === editingTxId);
