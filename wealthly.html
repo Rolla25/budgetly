@@ -11,11 +11,11 @@
 /* Disable double-tap zoom, including within scrollable panels. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 :root {
-  --green-dark: #10b981;
-  --green-mid: #1b4f8f;
-  --green-light: #8db8e6;
-  --green-pale: #edf4fb;
-  --green-bg: #ffffff;
+  --success: #10b981;
+  --primary: #1b4f8f;
+  --primary-light: #8db8e6;
+  --primary-pale: #edf4fb;
+  --page-bg: #ffffff;
   --red: #ff6568;
   --red-soft: #ff7477;
   --red-pale: #fff0f1;
@@ -30,9 +30,9 @@
   --border: #d9e5f0;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-family: Inter, Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text-dark); }
+html, body { height: 100%; overflow: hidden; background: var(--page-bg); font-family: Inter, Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text-dark); width: 100%; max-width: 100%; overscroll-behavior-x: none; }
 body { background: #eef3f8; }
-#app { height: 100%; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; background: #ffffff; box-shadow: 0 24px 70px #102a4724; }
+#app { height: 100%; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; background: #ffffff; box-shadow: 0 24px 70px #102a4724; width: 100%; min-width: 0; touch-action: pan-y pinch-zoom; }
 
 /* Header + tabs (shared language with Budgetly) */
 .header { background: linear-gradient(110deg, #102e53, var(--blue)); padding: 12px 20px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
@@ -64,7 +64,7 @@ body { background: #eef3f8; }
 .nw-split-value.liabilities { color: #f6c3ca; }
 
 .nw-change { text-align: center; font-size: 13px; font-weight: 600; margin: 10px 0 18px; }
-.nw-change.positive { color: var(--green-dark); }
+.nw-change.positive { color: var(--success); }
 .nw-change.negative { color: var(--red); }
 .nw-change.neutral { color: var(--text-light); font-weight: 500; }
 
@@ -88,21 +88,21 @@ body { background: #eef3f8; }
 .legend-list { margin-top: 18px; display: flex; flex-direction: column; gap: 11px; }
 .legend-row { display: flex; align-items: center; gap: 10px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.legend-name { flex: 1; font-size: 13px; color: var(--text-dark); font-weight: 500; }
+.legend-name { flex: 1; font-size: 13px; color: var(--text-dark); font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
 .legend-pct { font-size: 12px; color: var(--text-light); width: 38px; text-align: right; }
 .legend-amt { font-size: 13px; font-weight: 600; width: 92px; text-align: right; }
 .chart-empty { text-align: center; color: var(--text-light); font-size: 13px; padding: 30px 10px; line-height: 1.5; }
 
 /* Trend chart */
 .trend-badge { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
-.trend-badge.positive { background: var(--green-pale); color: var(--green-dark); }
+.trend-badge.positive { background: var(--primary-pale); color: var(--success); }
 .trend-badge.negative { background: var(--red-pale); color: var(--red); }
-.trend-badge.neutral { background: var(--green-bg); color: var(--text-light); }
+.trend-badge.neutral { background: var(--page-bg); color: var(--text-light); }
 .period-row { display: flex; gap: 8px; margin-bottom: 14px; }
-.period-btn { flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--green-bg); font-size: 12px; font-weight: 600; color: var(--text-mid); cursor: pointer; }
-.period-btn.active { background: var(--green-mid); color: white; border-color: var(--green-mid); }
-.trend-canvas-wrap { position: relative; width: 100%; }
-#trend-canvas { display: block; touch-action: pan-y; }
+.period-btn { flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--page-bg); font-size: 12px; font-weight: 600; color: var(--text-mid); cursor: pointer; }
+.period-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.trend-canvas-wrap { position: relative; width: 100%; overflow: hidden; }
+#trend-canvas { display: block; touch-action: pan-y; max-width: 100%; touch-action: pan-y pinch-zoom; }
 .trend-tooltip { position: absolute; pointer-events: none; background: var(--text-dark); color: white; font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; transform: translate(-50%, -120%); white-space: nowrap; opacity: 0; transition: opacity 0.12s ease; z-index: 5; }
 .trend-tooltip.show { opacity: 1; }
 .trend-tooltip-month { font-size: 10px; font-weight: 500; opacity: 0.75; display: block; }
@@ -121,7 +121,7 @@ body { background: #eef3f8; }
 .expand-sub { font-size: 12px; color: var(--text-light); margin-top: 3px; }
 .expand-right { display: flex; align-items: center; gap: 8px; }
 .expand-amount { font-size: 17px; font-weight: 700; }
-.expand-amount.assets { color: var(--green-dark); }
+.expand-amount.assets { color: var(--success); }
 .expand-amount.liabilities { color: var(--red); }
 .expand-chevron { font-size: 12px; color: var(--text-light); transition: transform 0.2s; }
 .expand-chevron.open { transform: rotate(180deg); }
@@ -135,8 +135,8 @@ body { background: #eef3f8; }
 .item-name { font-size: 14px; font-weight: 500; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-cat { font-size: 11px; color: var(--text-light); margin-top: 1px; }
 .item-value { font-size: 14px; font-weight: 600; white-space: nowrap; }
-.item-actions { display: flex; gap: 0; flex-shrink: 0; }
-.icon-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 6px; color: var(--text-light); }
+.item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.icon-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 12px; min-width: 44px; min-height: 44px; color: var(--text-light); }
 
 /* Per-section empty states */
 .empty-state-block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 26px 12px; }
@@ -161,11 +161,14 @@ body { background: #eef3f8; }
 .modal-title { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 16px; }
 .modal-field { margin-bottom: 16px; }
 .modal-label { font-size: 12px; font-weight: 600; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 6px; }
-.modal-input, .modal-select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text-dark); outline: none; background: var(--green-bg); font-family: inherit; }
-.modal-input:focus, .modal-select:focus { border-color: var(--green-mid); }
-.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+.modal-input, .modal-select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 15px; color: var(--text-dark); outline: none; background: var(--page-bg); font-family: inherit; }
+.modal-input:focus, .modal-select:focus { border-color: var(--primary); }
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; position: sticky; bottom: 0; background: white; padding: 10px 0; z-index: 1; }
+.field-error { color: var(--red); font-size: 12px; margin-top: 6px; }
+button:active, .icon-btn:active { opacity: 0.75; }
+.modal-input, .modal-select { scroll-margin-bottom: 90px; }
 .btn-primary { flex: 1; background: linear-gradient(110deg, #123866, #1d5aa0); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; }
-.btn-secondary { flex: 1; background: var(--green-pale); color: var(--green-dark); border: none; border-radius: 12px; padding: 14px 20px; font-size: 16px; font-weight: 500; cursor: pointer; }
+.btn-secondary { flex: 1; background: var(--primary-pale); color: var(--success); border: none; border-radius: 12px; padding: 14px 20px; font-size: 16px; font-weight: 500; cursor: pointer; }
 .btn-danger { background: var(--red-pale); color: var(--red); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
 
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 4px 0 6px; }
@@ -184,17 +187,17 @@ body { background: #eef3f8; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 28px; transition: 0.3s; }
 .toggle-slider:before { position: absolute; content: ''; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
-input:checked + .toggle-slider { background: var(--green-mid); }
+input:checked + .toggle-slider { background: var(--primary); }
 input:checked + .toggle-slider:before { transform: translateX(22px); }
 
-.toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 12px 10px 18px; border-radius: 22px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; display: flex; align-items: center; gap: 12px; pointer-events: none; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.show { pointer-events: auto; }
+.toast { position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-dark); color: white; padding: 10px 12px 10px 18px; border-radius: 22px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 200; white-space: nowrap; display: flex; align-items: center; gap: 12px; pointer-events: none; max-width: calc(100% - 32px); white-space: normal; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
 .toast-action { display: none; border: 0; border-radius: 16px; padding: 6px 10px; background: white; color: var(--text-dark); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .toast-action.show { display: inline-flex; }
 /* Keep phone scrolling vertical while retaining pinch-to-zoom accessibility. */
-html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
-#app { width: 100%; min-width: 0; touch-action: pan-y pinch-zoom; }
+
+
 .content, .modal-box, .settings-screen-body {
   min-width: 0;
   min-height: 0;
@@ -202,11 +205,11 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
   overscroll-behavior-x: none;
   touch-action: pan-y pinch-zoom;
 }
-.legend-name { min-width: 0; overflow-wrap: anywhere; }
+
 .item-value, .expand-amount, .nw-amount, .nw-split-value { overflow-wrap: anywhere; white-space: normal; min-width: 0; }
-.trend-canvas-wrap { overflow: hidden; }
-#trend-canvas { max-width: 100%; touch-action: pan-y pinch-zoom; }
-.toast { max-width: calc(100% - 32px); white-space: normal; }
+
+
+
 #toast-message { min-width: 0; overflow-wrap: anywhere; }
 .toast-action { flex-shrink: 0; }
 @media (max-width: 360px) {
@@ -225,14 +228,14 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
       <a href="wealthly.html" class="app-tab active" aria-current="page">Wealthly</a>
     </nav>
     <div class="header-actions">
-      <button class="header-btn" title="Settings" onclick="openSettingsModal()">⚙️</button>
+      <button class="header-btn" title="Settings" data-action="openSettingsModal">⚙️</button>
     </div>
   </div>
 
   <div class="month-bar">
-    <div class="month-item" id="prev-month-btn" onclick="changeMonth(-1)"></div>
+    <div class="month-item" id="prev-month-btn" data-action="changeMonth" data-arg="-1"></div>
     <div class="month-item active" id="cur-month-btn"></div>
-    <div class="month-item" id="next-month-btn" onclick="changeMonth(1)"></div>
+    <div class="month-item" id="next-month-btn" data-action="changeMonth" data-arg="1"></div>
   </div>
 
   <div class="content" id="content">
@@ -277,9 +280,9 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
         <span class="trend-badge neutral" id="trend-badge" style="display:none;"></span>
       </div>
       <div class="period-row">
-        <button class="period-btn" id="period-6" onclick="setPeriod('6')">6M</button>
-        <button class="period-btn active" id="period-12" onclick="setPeriod('12')">12M</button>
-        <button class="period-btn" id="period-all" onclick="setPeriod('all')">All</button>
+        <button class="period-btn" id="period-6" data-action="setPeriod" data-arg="6">6M</button>
+        <button class="period-btn active" id="period-12" data-action="setPeriod" data-arg="12">12M</button>
+        <button class="period-btn" id="period-all" data-action="setPeriod" data-arg="all">All</button>
       </div>
       <div class="trend-canvas-wrap" id="trend-wrap">
         <canvas id="trend-canvas"></canvas>
@@ -293,7 +296,7 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
     </div>
 
     <div class="expand-section">
-      <div class="expand-header" id="assets-header" onclick="toggleExpand('assets')">
+      <div class="expand-header" id="assets-header" data-action="toggleExpand" data-arg="assets">
         <div>
           <div class="expand-title">Assets</div>
           <div class="expand-sub" id="assets-sub">0 accounts</div>
@@ -307,7 +310,7 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
     </div>
 
     <div class="expand-section">
-      <div class="expand-header" id="liabilities-header" onclick="toggleExpand('liabilities')">
+      <div class="expand-header" id="liabilities-header" data-action="toggleExpand" data-arg="liabilities">
         <div>
           <div class="expand-title">Liabilities</div>
           <div class="expand-sub" id="liabilities-sub">0 accounts</div>
@@ -324,8 +327,8 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
 
   <div class="action-btn-wrap">
     <div class="inner">
-      <button class="action-btn asset" onclick="openAssetForm(null)"><span class="action-btn-icon">+</span> Add Asset</button>
-      <button class="action-btn liability" onclick="openLiabilityForm(null)"><span class="action-btn-icon">+</span> Add Liability</button>
+      <button class="action-btn asset" data-action="openAssetForm" data-arg="null"><span class="action-btn-icon">+</span> Add Asset</button>
+      <button class="action-btn liability" data-action="openLiabilityForm" data-arg="null"><span class="action-btn-icon">+</span> Add Liability</button>
     </div>
   </div>
 
@@ -333,7 +336,7 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
 
 <!-- Asset form modal -->
 <div class="modal-overlay" id="modal-asset">
-  <div class="modal-box">
+  <form class="modal-box" id="asset-form" novalidate>
     <div class="modal-title" id="asset-form-title">Add Asset</div>
     <div class="modal-field">
       <div class="modal-label">ASSET NAME</div>
@@ -352,16 +355,16 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
       <input class="modal-input" id="asset-note" type="text" placeholder="Any extra detail" maxlength="60">
     </div>
     <div class="modal-actions">
-      <button class="btn-danger" id="asset-delete-btn" style="display:none;" onclick="deleteAsset()">Delete</button>
-      <button class="btn-secondary" onclick="closeModal('modal-asset')">Cancel</button>
-      <button class="btn-primary" onclick="saveAsset()">Save</button>
+      <button type="button" class="btn-danger" id="asset-delete-btn" style="display:none;" data-action="deleteAsset">Delete</button>
+      <button type="button" class="btn-secondary" data-action="closeModal" data-arg="modal-asset">Cancel</button>
+      <button type="submit" class="btn-primary">Save</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <!-- Liability form modal -->
 <div class="modal-overlay" id="modal-liability">
-  <div class="modal-box">
+  <form class="modal-box" id="liability-form" novalidate>
     <div class="modal-title" id="liability-form-title">Add Liability</div>
     <div class="modal-field">
       <div class="modal-label">LIABILITY NAME</div>
@@ -380,18 +383,18 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
       <input class="modal-input" id="liability-note" type="text" placeholder="Any extra detail" maxlength="60">
     </div>
     <div class="modal-actions">
-      <button class="btn-danger" id="liability-delete-btn" style="display:none;" onclick="deleteLiability()">Delete</button>
-      <button class="btn-secondary" onclick="closeModal('modal-liability')">Cancel</button>
-      <button class="btn-primary" onclick="saveLiability()">Save</button>
+      <button type="button" class="btn-danger" id="liability-delete-btn" style="display:none;" data-action="deleteLiability">Delete</button>
+      <button type="button" class="btn-secondary" data-action="closeModal" data-arg="modal-liability">Cancel</button>
+      <button type="submit" class="btn-primary">Save</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <!-- Settings modal -->
 <div class="modal-overlay" id="modal-settings">
   <div class="modal-box settings-screen">
     <div class="settings-screen-header">
-      <button class="settings-screen-back" onclick="closeModal('modal-settings')" aria-label="Back to Wealthly">←</button>
+      <button class="settings-screen-back" data-action="closeModal" data-arg="modal-settings" aria-label="Back to Wealthly">←</button>
       <div class="settings-screen-title">Settings</div>
       <div aria-hidden="true"></div>
     </div>
@@ -404,7 +407,7 @@ html, body { width: 100%; max-width: 100%; overscroll-behavior-x: none; }
             <div class="settings-row-desc">Start each new month with last month's assets and liabilities already filled in, so you only need to edit what's changed.</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="carry-forward-toggle" onchange="onCarryForwardToggle()">
+            <input type="checkbox" id="carry-forward-toggle" data-change="carry-forward">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -448,8 +451,6 @@ let settings = { carryForward: true };
 let state = { currentYear: new Date().getFullYear(), currentMonth: new Date().getMonth() };
 let trendPeriod = '12';
 let expandOpen = { assets: false, liabilities: false };
-let editingAssetId = null;
-let editingLiabilityId = null;
 let trendState = null; // { pointsPx, keys, values }
 
 function load() {
@@ -573,6 +574,7 @@ function changeMonth(dir) {
   renderAll();
 }
 
+const renderCache = {};
 function renderAll() {
   updateMonthBars();
   const key = currentKey();
@@ -592,10 +594,20 @@ function renderAll() {
   document.getElementById('trend-card').style.display = hasHistoryThroughCurrent ? 'block' : 'none';
 
   renderChange(key, netWorth);
-  if (!noRecords) renderDonut(snap, totalAssets);
-  if (hasHistoryThroughCurrent) renderTrend();
-  renderExpandSection('assets', snap.assets, totalAssets, ASSET_CATS);
-  renderExpandSection('liabilities', snap.liabilities, totalLiabilities, LIAB_CATS);
+  const assetsSignature = JSON.stringify(snap.assets);
+  const liabilitiesSignature = JSON.stringify(snap.liabilities);
+  if (!noRecords && renderCache.donut !== assetsSignature) {
+    renderDonut(snap, totalAssets);
+    renderCache.donut = assetsSignature;
+  }
+  const trendSignature = JSON.stringify([key, trendPeriod, settings.carryForward, snapshots]);
+  if (hasHistoryThroughCurrent && renderCache.trend !== trendSignature) {
+    renderTrend();
+    renderCache.trend = trendSignature;
+  }
+  if (renderCache.assets !== assetsSignature) renderExpandSection('assets', snap.assets, totalAssets, ASSET_CATS);
+  if (renderCache.liabilities !== liabilitiesSignature) renderExpandSection('liabilities', snap.liabilities, totalLiabilities, LIAB_CATS);
+  Object.assign(renderCache, { assets: assetsSignature, liabilities: liabilitiesSignature });
 }
 
 function renderChange(key, netWorth) {
@@ -643,7 +655,7 @@ function renderDonut(snap, totalAssets) {
   const legend = document.getElementById('legend-list');
 
   if (totalAssets === 0 || segments.length === 0) {
-    ctx.beginPath(); ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
+    ctx.beginPath(); ctx.arc(cx, cy, (outerR + innerR) / 2, 0, 2 * Math.PI);
     ctx.strokeStyle = '#e4eee8'; ctx.lineWidth = outerR - innerR; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff'; ctx.fill();
@@ -730,7 +742,7 @@ function renderTrend() {
   });
   const available = series.filter(point => point.nw !== null);
 
-  const cssW = Math.max(wrap.clientWidth, 240);
+  const cssW = Math.max(wrap.clientWidth, 1);
   const cssH = 180;
 
   // remove any previous empty message
@@ -841,10 +853,19 @@ function drawTrendChart(highlightIdx) {
   ctx.font = '10px -apple-system, sans-serif';
   ctx.textAlign = 'center';
   const labelStep = Math.max(1, Math.ceil(pointsPx.length / 5));
+  let labelRight = -Infinity;
+  const last = pointsPx.length - 1;
+  const lastWidth = ctx.measureText(keyToLabel(pointsPx[last].key)).width;
   pointsPx.forEach((p, i) => {
-    if (i % labelStep === 0 || i === pointsPx.length - 1) {
-      ctx.fillText(keyToLabel(p.key), p.x, cssH - 6);
-    }
+    if (i % labelStep !== 0 && i !== last) return;
+    const label = keyToLabel(p.key);
+    const width = ctx.measureText(label).width;
+    const left = Math.max(0, Math.min(p.x - width / 2, cssW - width));
+    if (i !== last && left + width + 10 > cssW - lastWidth) return;
+    if (left < labelRight + 10) return;
+    ctx.textAlign = 'left';
+    ctx.fillText(label, left, cssH - 6);
+    labelRight = left + width;
   });
 
   if (highlightIdx !== null && pointsPx[highlightIdx] && pointsPx[highlightIdx].nw !== null) {
@@ -871,7 +892,7 @@ function drawTrendChart(highlightIdx) {
 function nearestTrendIndex(clientX) {
   const canvas = document.getElementById('trend-canvas');
   const rect = canvas.getBoundingClientRect();
-  const x = clientX - rect.left;
+  const x = (clientX - rect.left) * trendState.cssW / rect.width;
   let best = null, bestDist = Infinity;
   trendState.pointsPx.forEach((p, i) => {
     if (p.nw === null) return;
@@ -890,8 +911,17 @@ function showTrendPoint(idx) {
     : 'Recorded value';
   tooltip.innerHTML = '<span class="trend-tooltip-month">' + keyToLabel(p.key) + '</span>' +
     fmtSigned(p.nw) + '<span class="trend-tooltip-state">' + stateLabel + '</span>';
-  tooltip.style.left = p.x + 'px';
-  tooltip.style.top = p.y + 'px';
+  const scale = document.getElementById('trend-canvas').getBoundingClientRect().width / trendState.cssW;
+  const width = document.getElementById('trend-wrap').clientWidth;
+  tooltip.style.maxWidth = Math.max(1, width - 8) + 'px';
+  tooltip.style.whiteSpace = 'normal';
+  tooltip.style.transform = 'none';
+  const left = Math.max(4, Math.min(p.x * scale - tooltip.offsetWidth / 2, width - tooltip.offsetWidth - 4));
+  let top = p.y - tooltip.offsetHeight - 10;
+  if (top < 4) top = p.y + 10;
+  top = Math.max(4, Math.min(top, trendState.cssH - tooltip.offsetHeight - 4));
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
   tooltip.classList.add('show');
 }
 function hideTrendPoint() {
@@ -899,18 +929,35 @@ function hideTrendPoint() {
   drawTrendChart(null);
   document.getElementById('trend-tooltip').classList.remove('show');
 }
+let trendFrame = null;
+function clearTrendInteraction() {
+  if (trendFrame !== null) cancelAnimationFrame(trendFrame);
+  trendFrame = null;
+  hideTrendPoint();
+}
 function handleTrendPointer(e) {
   if (!trendState) return;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  showTrendPoint(nearestTrendIndex(clientX));
+  const clientX = e.clientX;
+  if (trendFrame !== null) cancelAnimationFrame(trendFrame);
+  trendFrame = requestAnimationFrame(() => {
+    trendFrame = null;
+    if (trendState) showTrendPoint(nearestTrendIndex(clientX));
+  });
 }
 (function initTrendInteraction() {
   const canvas = document.getElementById('trend-canvas');
-  canvas.addEventListener('mousemove', handleTrendPointer);
-  canvas.addEventListener('mouseleave', hideTrendPoint);
-  canvas.addEventListener('touchstart', handleTrendPointer, { passive: true });
-  canvas.addEventListener('touchmove', handleTrendPointer, { passive: true });
-  canvas.addEventListener('touchend', hideTrendPoint);
+  canvas.addEventListener('pointerdown', handleTrendPointer);
+  canvas.addEventListener('pointermove', e => {
+    if (e.buttons || e.pointerType === 'mouse') handleTrendPointer(e);
+  });
+  canvas.addEventListener('pointercancel', clearTrendInteraction);
+  canvas.addEventListener('pointerleave', e => {
+    if (e.pointerType === 'mouse') clearTrendInteraction();
+  });
+  document.getElementById('content').addEventListener('scroll', clearTrendInteraction, { passive: true });
+  document.addEventListener('pointerdown', e => {
+    if (e.target !== canvas) clearTrendInteraction();
+  });
 })();
 let trendResizeTimer = null;
 window.addEventListener('resize', () => {
@@ -949,18 +996,19 @@ function renderExpandSection(section, items, total, catList) {
     const cat = getCat(catId, catList);
     const groupItems = [...grouped[catId]].sort((a, b) => (parseFloat(b.value) || 0) - (parseFloat(a.value) || 0));
     const rows = groupItems.map(item => {
-      const editCall = section === 'assets' ? "openAssetForm('" + item.id + "')" : "openLiabilityForm('" + item.id + "')";
-      const delCall = section === 'assets' ? "quickDeleteAsset('" + item.id + "')" : "quickDeleteLiability('" + item.id + "')";
+      const editAction = section === 'assets' ? 'openAssetForm' : 'openLiabilityForm';
+      const deleteAction = section === 'assets' ? 'quickDeleteAsset' : 'quickDeleteLiability';
+      const itemId = escapeHtml(item.id).replace(/"/g, '&quot;');
       return '<div class="item-row">' +
         '<div class="item-icon" style="background:' + cat.color + '22;">' + cat.icon + '</div>' +
-        '<div class="item-info" onclick="' + editCall + '">' +
+        '<div class="item-info" data-action="' + editAction + '" data-arg="' + itemId + '">' +
           '<div class="item-name">' + escapeHtml(item.name) + '</div>' +
           '<div class="item-cat">' + cat.name + '</div>' +
         '</div>' +
         '<span class="item-value">' + fmtINR(item.value) + '</span>' +
         '<div class="item-actions">' +
-          '<button class="icon-btn" onclick="' + editCall + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>' +
-          '<button class="icon-btn" onclick="' + delCall + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>' +
+          '<button class="icon-btn" data-action="' + editAction + '" data-arg="' + itemId + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>' +
+          '<button class="icon-btn" data-action="' + deleteAction + '" data-arg="' + itemId + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.3" stroke-linecap="round"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -968,165 +1016,88 @@ function renderExpandSection(section, items, total, catList) {
   }).join('');
 }
 
-/* ---------- Asset form ---------- */
-function populateAssetCategories() {
-  const sel = document.getElementById('asset-category');
-  sel.innerHTML = '<option value="">Select category</option>' +
-    ASSET_CATS.map(c => '<option value="' + c.id + '">' + c.icon + ' ' + c.name + '</option>').join('');
+/* ---------- Shared account forms ---------- */
+const formConfig = {
+  asset: { collection: 'assets', title: 'Asset', categories: ASSET_CATS, prefix: 'a_' },
+  liability: { collection: 'liabilities', title: 'Liability', categories: LIAB_CATS, prefix: 'l_' },
+};
+const formSessions = {};
+function formValues(type) {
+  return Object.fromEntries(['name', 'category', 'value', 'note'].map(field =>
+    [field, document.getElementById(type + '-' + field).value]));
 }
-function openAssetForm(id) {
-  populateAssetCategories();
-  editingAssetId = id;
+function clearFieldErrors(type) {
+  document.querySelectorAll('#modal-' + type + ' .field-error').forEach(el => el.remove());
+}
+function fieldError(type, field, message) {
+  const input = document.getElementById(type + '-' + field);
+  const error = document.createElement('div');
+  error.className = 'field-error';
+  error.textContent = message;
+  input.after(error);
+  input.focus();
+  input.scrollIntoView({ block: 'nearest' });
+}
+function openAccountForm(type, id) {
+  const config = formConfig[type];
+  const item = id ? computeDisplaySnapshot(currentKey())[config.collection].find(item => item.id === id) : null;
+  if (id && !item) return;
+  document.getElementById(type + '-category').innerHTML = '<option value="">Select category</option>' +
+    config.categories.map(c => '<option value="' + c.id + '">' + c.icon + ' ' + c.name + '</option>').join('');
+  document.getElementById(type + '-form-title').textContent = (id ? 'Edit ' : 'Add ') + config.title;
+  for (const field of ['name', 'category', 'value', 'note']) {
+    document.getElementById(type + '-' + field).value = item ? (item[field === 'category' ? 'catId' : field] ?? '') : '';
+  }
+  document.getElementById(type + '-delete-btn').style.display = id ? 'block' : 'none';
+  clearFieldErrors(type);
+  formSessions[type] = { id, initial: JSON.stringify(formValues(type)) };
+  openModal('modal-' + type);
+  document.getElementById(type + '-name').focus();
+}
+function saveAccount(type) {
+  const config = formConfig[type];
+  const fields = formValues(type);
+  const name = fields.name.trim(), catId = fields.category, note = fields.note.trim();
+  const value = parseFloat(fields.value);
+  clearFieldErrors(type);
+  if (!name) return fieldError(type, 'name', 'Enter a ' + type + ' name');
+  if (!catId) return fieldError(type, 'category', 'Select a category');
+  if (fields.value === '' || !Number.isFinite(value) || value < 0) return fieldError(type, 'value', 'Enter a valid amount');
+  const snap = materializeSnapshot(currentKey());
+  const id = formSessions[type]?.id;
   if (id) {
-    const snap = computeDisplaySnapshot(currentKey());
-    const item = snap.assets.find(a => a.id === id);
-    document.getElementById('asset-form-title').textContent = 'Edit Asset';
-    document.getElementById('asset-name').value = item.name;
-    document.getElementById('asset-category').value = item.catId;
-    document.getElementById('asset-value').value = item.value;
-    document.getElementById('asset-note').value = item.note || '';
-    document.getElementById('asset-delete-btn').style.display = 'block';
-  } else {
-    document.getElementById('asset-form-title').textContent = 'Add Asset';
-    document.getElementById('asset-name').value = '';
-    document.getElementById('asset-category').value = '';
-    document.getElementById('asset-value').value = '';
-    document.getElementById('asset-note').value = '';
-    document.getElementById('asset-delete-btn').style.display = 'none';
-  }
-  openModal('modal-asset');
-}
-function saveAsset() {
-  const name = document.getElementById('asset-name').value.trim();
-  const catId = document.getElementById('asset-category').value;
-  const valueRaw = document.getElementById('asset-value').value;
-  const note = document.getElementById('asset-note').value.trim();
-  const value = parseFloat(valueRaw);
-
-  if (!name) { showToast('Enter an asset name'); return; }
-  if (!catId) { showToast('Select a category'); return; }
-  if (valueRaw === '' || !Number.isFinite(value) || value < 0) { showToast('Enter a valid value'); return; }
-
-  const snap = materializeSnapshot(currentKey());
-  if (editingAssetId) {
-    const item = snap.assets.find(a => a.id === editingAssetId);
+    const item = snap[config.collection].find(item => item.id === id);
+    if (!item) return;
     Object.assign(item, { name, catId, value, note });
-  } else {
-    snap.assets.push({ id: 'a_' + Date.now(), name, catId, value, note });
-  }
+  } else snap[config.collection].push({ id: config.prefix + Date.now(), name, catId, value, note });
   snap.lastUpdated = new Date().toISOString();
   save();
-  closeModal('modal-asset');
+  closeModal('modal-' + type, true);
   renderAll();
-  showToast('Asset saved!');
+  showToast(config.title + ' saved!');
 }
-function deleteAsset() {
-  if (!editingAssetId) return;
-  const item = computeDisplaySnapshot(currentKey()).assets.find(a => a.id === editingAssetId);
-  if (!item) return;
-  if (!window.confirm('Delete "' + item.name + '"? This cannot be undone.')) return;
-  const snap = materializeSnapshot(currentKey());
-  snap.assets = snap.assets.filter(a => a.id !== editingAssetId);
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  closeModal('modal-asset');
-  renderAll();
-  showToast('Asset deleted');
-}
-function quickDeleteAsset(id) {
+function deleteAccount(type, id, fromForm = false) {
+  const config = formConfig[type];
   const key = currentKey();
-  const item = computeDisplaySnapshot(key).assets.find(asset => asset.id === id);
+  const item = computeDisplaySnapshot(key)[config.collection].find(item => item.id === id);
   if (!item) return;
-  if (!window.confirm('Are you sure you want to delete "' + item.name + '"?')) return;
   const snap = materializeSnapshot(key);
-  const index = snap.assets.findIndex(a => a.id === id);
-  if (index < 0) return;
-  const removed = snap.assets.splice(index, 1)[0];
+  const index = snap[config.collection].findIndex(item => item.id === id);
+  const removed = snap[config.collection].splice(index, 1)[0];
   snap.lastUpdated = new Date().toISOString();
   save();
+  if (fromForm) closeModal('modal-' + type, true);
   renderAll();
-  showToast('Asset deleted', 'Undo', () => restoreDeletedItem(key, 'assets', removed, index));
+  showToast(config.title + ' deleted', 'Undo', () => restoreDeletedItem(key, config.collection, removed, index));
 }
-
-/* ---------- Liability form ---------- */
-function populateLiabilityCategories() {
-  const sel = document.getElementById('liability-category');
-  sel.innerHTML = '<option value="">Select category</option>' +
-    LIAB_CATS.map(c => '<option value="' + c.id + '">' + c.icon + ' ' + c.name + '</option>').join('');
-}
-function openLiabilityForm(id) {
-  populateLiabilityCategories();
-  editingLiabilityId = id;
-  if (id) {
-    const snap = computeDisplaySnapshot(currentKey());
-    const item = snap.liabilities.find(l => l.id === id);
-    document.getElementById('liability-form-title').textContent = 'Edit Liability';
-    document.getElementById('liability-name').value = item.name;
-    document.getElementById('liability-category').value = item.catId;
-    document.getElementById('liability-value').value = item.value;
-    document.getElementById('liability-note').value = item.note || '';
-    document.getElementById('liability-delete-btn').style.display = 'block';
-  } else {
-    document.getElementById('liability-form-title').textContent = 'Add Liability';
-    document.getElementById('liability-name').value = '';
-    document.getElementById('liability-category').value = '';
-    document.getElementById('liability-value').value = '';
-    document.getElementById('liability-note').value = '';
-    document.getElementById('liability-delete-btn').style.display = 'none';
-  }
-  openModal('modal-liability');
-}
-function saveLiability() {
-  const name = document.getElementById('liability-name').value.trim();
-  const catId = document.getElementById('liability-category').value;
-  const valueRaw = document.getElementById('liability-value').value;
-  const note = document.getElementById('liability-note').value.trim();
-  const value = parseFloat(valueRaw);
-
-  if (!name) { showToast('Enter a liability name'); return; }
-  if (!catId) { showToast('Select a category'); return; }
-  if (valueRaw === '' || !Number.isFinite(value) || value < 0) { showToast('Enter a valid amount'); return; }
-
-  const snap = materializeSnapshot(currentKey());
-  if (editingLiabilityId) {
-    const item = snap.liabilities.find(l => l.id === editingLiabilityId);
-    Object.assign(item, { name, catId, value, note });
-  } else {
-    snap.liabilities.push({ id: 'l_' + Date.now(), name, catId, value, note });
-  }
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  closeModal('modal-liability');
-  renderAll();
-  showToast('Liability saved!');
-}
-function deleteLiability() {
-  if (!editingLiabilityId) return;
-  const item = computeDisplaySnapshot(currentKey()).liabilities.find(l => l.id === editingLiabilityId);
-  if (!item) return;
-  if (!window.confirm('Delete "' + item.name + '"? This cannot be undone.')) return;
-  const snap = materializeSnapshot(currentKey());
-  snap.liabilities = snap.liabilities.filter(l => l.id !== editingLiabilityId);
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  closeModal('modal-liability');
-  renderAll();
-  showToast('Liability deleted');
-}
-function quickDeleteLiability(id) {
-  const key = currentKey();
-  const item = computeDisplaySnapshot(key).liabilities.find(liability => liability.id === id);
-  if (!item) return;
-  if (!window.confirm('Are you sure you want to delete "' + item.name + '"?')) return;
-  const snap = materializeSnapshot(key);
-  const index = snap.liabilities.findIndex(l => l.id === id);
-  if (index < 0) return;
-  const removed = snap.liabilities.splice(index, 1)[0];
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  renderAll();
-  showToast('Liability deleted', 'Undo', () => restoreDeletedItem(key, 'liabilities', removed, index));
-}
+function openAssetForm(id) { openAccountForm('asset', id); }
+function openLiabilityForm(id) { openAccountForm('liability', id); }
+function saveAsset() { saveAccount('asset'); }
+function saveLiability() { saveAccount('liability'); }
+function deleteAsset() { deleteAccount('asset', formSessions.asset?.id, true); }
+function deleteLiability() { deleteAccount('liability', formSessions.liability?.id, true); }
+function quickDeleteAsset(id) { deleteAccount('asset', id); }
+function quickDeleteLiability(id) { deleteAccount('liability', id); }
 
 function restoreDeletedItem(key, collection, item, index) {
   const snap = materializeSnapshot(key);
@@ -1151,12 +1122,19 @@ function onCarryForwardToggle() {
 
 /* ---------- Modal + toast helpers ---------- */
 function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id, force = false) {
+  const type = id.replace('modal-', '');
+  if (!force && formSessions[type] && JSON.stringify(formValues(type)) !== formSessions[type].initial) {
+    if (!window.confirm('Discard your unfinished changes?')) return;
+  }
+  document.getElementById(id).classList.remove('open');
+}
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
 });
 let toastTimer = null;
 let pendingToastAction = null;
+const toastQueue = [];
 function hideToast() {
   const t = document.getElementById('toast');
   t.classList.remove('show');
@@ -1164,8 +1142,14 @@ function hideToast() {
   actionBtn.classList.remove('show');
   actionBtn.onclick = null;
   pendingToastAction = null;
+  clearTimeout(toastTimer);
+  if (toastQueue.length) {
+    const next = toastQueue.shift();
+    showToast(...next);
+  }
 }
 function showToast(msg, actionLabel = null, action = null) {
+  if (pendingToastAction) { toastQueue.push([msg, actionLabel, action]); return; }
   clearTimeout(toastTimer);
   const t = document.getElementById('toast');
   const message = document.getElementById('toast-message');
@@ -1185,9 +1169,48 @@ function showToast(msg, actionLabel = null, action = null) {
     actionBtn.onclick = null;
   }
   t.classList.add('show');
-  toastTimer = setTimeout(hideToast, action ? 5000 : 2200);
+  toastTimer = setTimeout(hideToast, action ? 10000 : 2200);
 }
 
+const clickActions = { openSettingsModal, changeMonth, setPeriod, toggleExpand, openAssetForm,
+  openLiabilityForm, closeModal, deleteAsset, deleteLiability, quickDeleteAsset, quickDeleteLiability };
+document.addEventListener('click', e => {
+  const target = e.target.closest('[data-action]');
+  if (!target || !clickActions[target.dataset.action]) return;
+  const raw = target.dataset.arg;
+  const arg = raw === 'null' ? null : target.dataset.action === 'changeMonth' ? Number(raw) : raw;
+  clickActions[target.dataset.action](arg);
+});
+document.getElementById('carry-forward-toggle').addEventListener('change', onCarryForwardToggle);
+for (const type of Object.keys(formConfig)) {
+  const form = document.getElementById(type + '-form');
+  form.addEventListener('submit', e => { e.preventDefault(); saveAccount(type); });
+  const inputs = [...form.querySelectorAll('input, select')];
+  inputs.forEach((input, index) => {
+    input.setAttribute('enterkeyhint', index === inputs.length - 1 ? 'done' : 'next');
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && input.tagName !== 'SELECT' && index < inputs.length - 1) {
+        e.preventDefault(); inputs[index + 1].focus();
+      }
+    });
+  });
+}
+// Keep the active sheet above the software keyboard without changing page layout.
+if (window.visualViewport) {
+  const updateSheetViewport = () => {
+    const viewport = window.visualViewport;
+    for (const type of Object.keys(formConfig)) {
+      const overlay = document.getElementById('modal-' + type);
+      overlay.style.top = viewport.offsetTop + 'px';
+      overlay.style.height = viewport.height + 'px';
+      overlay.style.bottom = 'auto';
+      overlay.firstElementChild.style.maxHeight = '85%';
+    }
+  };
+  window.visualViewport.addEventListener('resize', updateSheetViewport);
+  window.visualViewport.addEventListener('scroll', updateSheetViewport);
+  updateSheetViewport();
+}
 load();
 loadSettings();
 renderAll();
