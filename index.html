@@ -156,7 +156,11 @@ body { background: #eef3f8; }
 .add-date { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; font-size: 15px; color: var(--text-mid); cursor: pointer; flex-shrink: 0; }
 .amount-display { margin: 0 16px; background: linear-gradient(110deg, #123866, #1d5aa0); border-radius: 14px; padding: 20px 22px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; box-shadow: 0 14px 32px #06172f55; }
 .amount-display.expense-mode { background: var(--red); }
-.amount-value { flex: 1; font-size: 45px; font-weight: 600; color: white; text-align: right; letter-spacing: -1px; }
+.amount-value { flex: 1; min-width: 0; white-space: nowrap; overflow-x: auto; font-size: 45px; font-weight: 600; color: white; text-align: right; letter-spacing: -1px; }
+.amount-controls { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.amount-clear { background: none; border: 1px solid #ffffff80; border-radius: 6px; color: white; padding: 5px 8px; cursor: pointer; }
+.settings-header { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; text-align: center; }
+.settings-header .header-btn { width: 44px; height: 44px; justify-self: start; }
 .amount-backspace { background: none; border: none; font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.8); padding: 4px 0 4px 8px; }
 .note-input { margin: 14px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid var(--border); padding-bottom: 10px; flex-shrink: 0; }
 .note-input input { flex: 1; border: none; background: none; font-size: 15px; color: var(--text-dark); outline: none; }
@@ -332,7 +336,10 @@ input:checked + .toggle-slider:before { transform:translateX(22px); }
         <span style="font-size:11px;color:rgba(255,255,255,0.8);">INR</span>
       </div>
       <span class="amount-value" id="amount-value">0</span>
-      <button class="amount-backspace" onclick="numpadAction('back')">⌫</button>
+      <div class="amount-controls">
+      <button class="amount-clear" onclick="numpadAction('clear')" aria-label="Clear amount">C</button>
+      <button class="amount-backspace" onclick="numpadAction('back')" aria-label="Delete last character">⌫</button>
+      </div>
     </div>
     <div class="note-input">
       <span style="font-size:18px;color:var(--text-light);">✏️</span>
@@ -371,8 +378,8 @@ input:checked + .toggle-slider:before { transform:translateX(22px); }
 
   <!-- SETTINGS SCREEN -->
   <div class="screen" id="screen-settings">
-    <div class="header">
-      <button class="header-btn" onclick="goBack()" style="font-size:24px;">←</button>
+    <div class="header settings-header">
+      <button class="header-btn" onclick="goBack()" aria-label="Back" style="font-size:24px;">←</button>
       <div class="header-title">Settings</div>
       <div style="width:32px"></div>
     </div>
@@ -660,7 +667,40 @@ function fmtDateShort(iso) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
+// Keep each month's list position and expansion choices while navigating.
+const listViewMemory = new Map();
+const renderedListKeys = {};
+function rememberListViews() {
+  ['catlist', 'datelist'].forEach(view => {
+    const container = document.getElementById('view-' + view);
+    const key = renderedListKeys[view];
+    if (!key || container.style.display === 'none') return;
+    const groups = new Map();
+    container.querySelectorAll('.cat-group-items, .date-group-items').forEach(group => {
+      groups.set(group.id, group.classList.contains('open'));
+    });
+    listViewMemory.set(key, { groups, scrollTop: container.scrollTop });
+  });
+}
+function restoreListView(view) {
+  const key = budgetMonthKey() + ':' + view;
+  const container = document.getElementById('view-' + view);
+  const saved = listViewMemory.get(key);
+  renderedListKeys[view] = key;
+  if (saved) {
+    container.querySelectorAll('.cat-group-items, .date-group-items').forEach(group => {
+      if (!saved.groups.has(group.id)) return;
+      const open = saved.groups.get(group.id);
+      group.classList.toggle('open', open);
+      const chevron = group.previousElementSibling.querySelector('.cat-group-chevron, .date-group-chevron');
+      if (chevron) chevron.classList.toggle('open', open);
+    });
+  }
+  container.scrollTop = saved ? saved.scrollTop : 0;
+}
+
 function setView(v) {
+  rememberListViews();
   currentView = v;
   document.getElementById('view-donut').style.display   = v === 'donut'    ? 'flex'  : 'none';
   document.getElementById('view-catlist').style.display  = v === 'catlist'  ? 'block' : 'none';
@@ -676,8 +716,8 @@ function setView(v) {
     rightBtn.innerHTML = '↑';
   }
 
-  if (v === 'catlist')  renderCatListView();
-  if (v === 'datelist') renderDateListView();
+  if (v === 'catlist') { renderCatListView(); restoreListView(v); }
+  if (v === 'datelist') { renderDateListView(); restoreListView(v); }
   if (v === 'donut')    renderDonut();
 }
 
@@ -1040,7 +1080,7 @@ function openEdit(id) {
   amountStr = tx.amount.toString(); selectedCatId = tx.catId; catPanelOpen = false;
   document.getElementById('add-screen-title').textContent = tx.type === 'expense' ? 'Edit Expense' : 'Edit Income';
   document.getElementById('amount-display').className = 'amount-display' + (tx.type === 'expense' ? ' expense-mode' : '');
-  document.getElementById('amount-value').textContent = amountStr;
+  updateAmountDisplay();
   document.getElementById('note-input').value = tx.note || '';
   document.getElementById('add-date-label').textContent = formatDisplayDate(addDate);
   const cat = getCat(tx.catId);
@@ -1054,7 +1094,7 @@ function openAdd(mode) {
   selectedCatId = null; editingTxId = null; catPanelOpen = false;
   document.getElementById('add-screen-title').textContent = mode === 'expense' ? 'New Expense' : 'New Income';
   document.getElementById('amount-display').className = 'amount-display' + (mode === 'expense' ? ' expense-mode' : '');
-  document.getElementById('amount-value').textContent = '0';
+  updateAmountDisplay();
   document.getElementById('note-input').value = '';
   document.getElementById('add-date-label').textContent = formatDisplayDate(addDate);
   document.getElementById('cat-choose-btn').textContent = 'CHOOSE CATEGORY';
@@ -1066,28 +1106,76 @@ function formatDisplayDate(d) {
   return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-function numpadAction(key) {
-  if (key === 'back') { amountStr = amountStr.length <= 1 ? '0' : amountStr.slice(0, -1); }
-  else if (key === '=') {
-    try {
-      const r = Function('"use strict";return(' + amountStr + ')')();
-      if (!isNaN(r) && isFinite(r)) amountStr = parseFloat(r.toFixed(2)).toString();
-    } catch(e) {}
-  } else if (key === '.') {
-    const segs = amountStr.split(/[\+\-\*\/]/);
-    if (!segs[segs.length-1].includes('.')) amountStr += '.';
-  } else if (['+','-','*','/'].includes(key)) {
-    const last = amountStr[amountStr.length-1];
-    amountStr = ['+','-','*','/'].includes(last) ? amountStr.slice(0,-1)+key : amountStr+key;
-  } else {
-    amountStr = amountStr === '0' ? key : amountStr + key;
+const MAX_EXPRESSION_LENGTH = 30;
+
+// Parse decimal operands directly, so leading zeroes never become JavaScript syntax.
+function evaluateAmount(expression) {
+  if (!expression || /[+*/-]$/.test(expression)) throw new Error('Finish the calculation');
+  let position = 0;
+  function number() {
+    const match = expression.slice(position).match(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/i);
+    if (!match) throw new Error('Enter a valid number');
+    position += match[0].length;
+    const value = Number(match[0]);
+    if (!Number.isFinite(value)) throw new Error('Amount is too large');
+    return value;
   }
-  document.getElementById('amount-value').textContent = amountStr;
+  function term() {
+    let value = number();
+    while (expression[position] === '*' || expression[position] === '/') {
+      const operator = expression[position++];
+      const right = number();
+      if (operator === '/' && right === 0) throw new Error('Cannot divide by zero');
+      value = operator === '*' ? value * right : value / right;
+    }
+    return value;
+  }
+  let value = term();
+  while (position < expression.length) {
+    const operator = expression[position++];
+    if (operator !== '+' && operator !== '-') throw new Error('Enter a valid calculation');
+    const right = term();
+    value = operator === '+' ? value + right : value - right;
+  }
+  if (!Number.isFinite(value)) throw new Error('Amount is too large');
+  return value;
+}
+
+function updateAmountDisplay() {
+  const display = document.getElementById('amount-value');
+  display.textContent = amountStr;
+  display.scrollLeft = display.scrollWidth;
+}
+
+function numpadAction(key) {
+  let next = amountStr;
+  if (key === 'clear') next = '0';
+  else if (key === 'back') next = amountStr.length <= 1 ? '0' : amountStr.slice(0, -1);
+  else if (key === '=') {
+    try { next = Number(evaluateAmount(amountStr).toFixed(2)).toString(); }
+    catch (error) { showToast(error.message); return; }
+  } else if (key === '.') {
+    const operand = amountStr.split(/[+*/-]/).pop();
+    if (operand.includes('.') || /e/i.test(operand)) return;
+    next += operand === '' ? '0.' : '.';
+  } else if (['+', '-', '*', '/'].includes(key)) {
+    const last = amountStr[amountStr.length - 1];
+    next = ['+', '-', '*', '/'].includes(last) ? amountStr.slice(0, -1) + key : amountStr + key;
+  } else if (/^\d$/.test(key)) {
+    next = amountStr === '0' ? key : amountStr + key;
+  } else return;
+  if (next.length > MAX_EXPRESSION_LENGTH) {
+    showToast('Maximum ' + MAX_EXPRESSION_LENGTH + ' characters');
+    return;
+  }
+  amountStr = next;
+  updateAmountDisplay();
 }
 
 function saveTx() {
   let amount;
-  try { amount = parseFloat(Function('"use strict";return(' + amountStr + ')')());} catch(e){amount=0;}
+  try { amount = evaluateAmount(amountStr); }
+  catch (error) { showToast(error.message); return; }
   if (!Number.isFinite(amount) || amount <= 0) { showToast('Enter a valid amount'); return; }
   if (!selectedCatId) { showToast('Choose a category'); return; }
   if (editingTxId) {
@@ -1256,10 +1344,12 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
 
+let toastTimer;
 function showToast(msg) {
+  clearTimeout(toastTimer);
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 load(); loadSettings(); loadBudgets(); renderHome();
