@@ -217,6 +217,15 @@ input:checked + .toggle-slider:before { transform: translateX(22px); }
   .item-value { max-width: 100%; }
   .legend-row { flex-wrap: wrap; }
 }
+/* Delete confirmation uses the existing navy, pale blue and coral palette. */
+#modal-delete { z-index: 150; align-items: center; padding: 24px; }
+.delete-confirm-box { width: 100%; max-width: 350px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 20px 60px #102a4738; }
+.delete-confirm-box .modal-title { margin-bottom: 10px; }
+.delete-confirm-message { color: var(--text-mid); font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.delete-confirm-actions { display: flex; gap: 12px; margin-top: 24px; }
+.delete-confirm-actions button { flex: 1; min-height: 48px; }
+.delete-confirm-actions .btn-secondary { color: var(--primary); }
+.delete-confirm-actions .btn-danger { background: var(--red-pale); color: var(--text-dark); border: 1px solid var(--red-soft); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -412,6 +421,17 @@ input:checked + .toggle-slider:before { transform: translateX(22px); }
           </label>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-delete" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-message">
+  <div class="delete-confirm-box">
+    <h2 class="modal-title" id="delete-confirm-title">Delete asset?</h2>
+    <p class="delete-confirm-message" id="delete-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button type="button" class="btn-secondary" id="delete-confirm-no" data-action="cancelDelete">No</button>
+      <button type="button" class="btn-danger" data-action="confirmDelete">Yes</button>
     </div>
   </div>
 </div>
@@ -1076,19 +1096,41 @@ function saveAccount(type) {
   renderAll();
   showToast(config.title + ' saved!');
 }
+let pendingDelete = null;
+let deleteOpener = null;
 function deleteAccount(type, id, fromForm = false) {
   const config = formConfig[type];
   const key = currentKey();
   const item = computeDisplaySnapshot(key)[config.collection].find(item => item.id === id);
   if (!item) return;
+  pendingDelete = { type, id, key, fromForm };
+  deleteOpener = document.activeElement;
+  document.getElementById('delete-confirm-title').textContent = 'Delete ' + type + '?';
+  document.getElementById('delete-confirm-message').textContent = 'Are you sure you want to delete “' + item.name + '”?';
+  openModal('modal-delete');
+  document.getElementById('delete-confirm-no').focus();
+}
+function cancelDelete() {
+  pendingDelete = null;
+  document.getElementById('modal-delete').classList.remove('open');
+  if (deleteOpener?.isConnected) deleteOpener.focus();
+  deleteOpener = null;
+}
+function confirmDelete() {
+  if (!pendingDelete) return;
+  const { type, id, key, fromForm } = pendingDelete;
+  const config = formConfig[type];
+  cancelDelete();
+  if (!computeDisplaySnapshot(key)[config.collection].some(item => item.id === id)) return;
   const snap = materializeSnapshot(key);
   const index = snap[config.collection].findIndex(item => item.id === id);
-  const removed = snap[config.collection].splice(index, 1)[0];
+  if (index < 0) return;
+  snap[config.collection].splice(index, 1);
   snap.lastUpdated = new Date().toISOString();
   save();
   if (fromForm) closeModal('modal-' + type, true);
   renderAll();
-  showToast(config.title + ' deleted', 'Undo', () => restoreDeletedItem(key, config.collection, removed, index));
+  showToast(config.title + ' deleted');
 }
 function openAssetForm(id) { openAccountForm('asset', id); }
 function openLiabilityForm(id) { openAccountForm('liability', id); }
@@ -1098,16 +1140,6 @@ function deleteAsset() { deleteAccount('asset', formSessions.asset?.id, true); }
 function deleteLiability() { deleteAccount('liability', formSessions.liability?.id, true); }
 function quickDeleteAsset(id) { deleteAccount('asset', id); }
 function quickDeleteLiability(id) { deleteAccount('liability', id); }
-
-function restoreDeletedItem(key, collection, item, index) {
-  const snap = materializeSnapshot(key);
-  if (snap[collection].some(existing => existing.id === item.id)) return;
-  snap[collection].splice(Math.min(index, snap[collection].length), 0, item);
-  snap.lastUpdated = new Date().toISOString();
-  save();
-  renderAll();
-  showToast(collection === 'assets' ? 'Asset restored' : 'Liability restored');
-}
 
 /* ---------- Settings ---------- */
 function openSettingsModal() {
@@ -1123,6 +1155,7 @@ function onCarryForwardToggle() {
 /* ---------- Modal + toast helpers ---------- */
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id, force = false) {
+  if (id === 'modal-delete') { cancelDelete(); return; }
   const type = id.replace('modal-', '');
   if (!force && formSessions[type] && JSON.stringify(formValues(type)) !== formSessions[type].initial) {
     if (!window.confirm('Discard your unfinished changes?')) return;
@@ -1173,13 +1206,21 @@ function showToast(msg, actionLabel = null, action = null) {
 }
 
 const clickActions = { openSettingsModal, changeMonth, setPeriod, toggleExpand, openAssetForm,
-  openLiabilityForm, closeModal, deleteAsset, deleteLiability, quickDeleteAsset, quickDeleteLiability };
+  openLiabilityForm, closeModal, deleteAsset, deleteLiability, quickDeleteAsset, quickDeleteLiability, cancelDelete, confirmDelete };
 document.addEventListener('click', e => {
   const target = e.target.closest('[data-action]');
   if (!target || !clickActions[target.dataset.action]) return;
   const raw = target.dataset.arg;
   const arg = raw === 'null' ? null : target.dataset.action === 'changeMonth' ? Number(raw) : raw;
   clickActions[target.dataset.action](arg);
+});
+document.getElementById('modal-delete').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); cancelDelete(); }
+  if (e.key === 'Tab') {
+    const buttons = [...document.querySelectorAll('#modal-delete button')];
+    const next = (buttons.indexOf(document.activeElement) + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
+    e.preventDefault(); buttons[next].focus();
+  }
 });
 document.getElementById('carry-forward-toggle').addEventListener('change', onCarryForwardToggle);
 for (const type of Object.keys(formConfig)) {
