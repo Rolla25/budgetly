@@ -1072,7 +1072,9 @@ function openAccountForm(type, id) {
   clearFieldErrors(type);
   formSessions[type] = { id, initial: JSON.stringify(formValues(type)) };
   openModal('modal-' + type);
-  document.getElementById(type + '-name').focus();
+  const initialInput = document.getElementById(type + (id ? '-value' : '-name'));
+  initialInput.focus();
+  if (id) initialInput.select();
 }
 function saveAccount(type) {
   const config = formConfig[type];
