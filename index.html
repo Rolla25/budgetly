@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Extend behind the iOS status bar; CSS below keeps controls in the safe area. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Budgetly">
-<meta name="theme-color" content="#0e2a4d">
+<meta name="theme-color" content="#102e53">
 <title>Budgetly</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/budgetly-32.png">
 <link rel="icon" type="image/svg+xml" href="icons/budgetly.svg">
@@ -32,13 +33,32 @@
   --blue: #205da4;
   --emerald: #10b981;
   --border: #d9e5f0;
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --status-bar-bg: #102e53;
 }
 html, body { height: 100%; overflow: hidden; background: var(--green-bg); font-family: Inter, Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text-dark); }
 body { background: #eef3f8; }
+/* A stationary, opaque surface behind the iPhone status bar.
+   Keep it outside the animated screens so navigation cannot expose text here. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-top);
+  background: var(--status-bar-bg);
+  z-index: 50;
+  pointer-events: none;
+}
+@media (display-mode: standalone) {
+  html, body { background: var(--status-bar-bg); }
+}
 #app { height: 100%; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; background: #ffffff; box-shadow: 0 24px 70px #102a4724; }
 
-.screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: #ffffff; transform: translateX(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1); z-index: 1; }
+/* Reserve the top inset once. Nested category overlays inherit this safe space. */
+.screen { position: absolute; inset: var(--safe-top) 0 0; display: flex; flex-direction: column; background: #ffffff; transform: translateX(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1); z-index: 1; }
 .screen.active { transform: translateX(0); z-index: 2; }
 .screen.slide-left { transform: translateX(-40%); }
 
